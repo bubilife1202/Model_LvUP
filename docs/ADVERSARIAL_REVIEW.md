@@ -2,13 +2,29 @@
 
 This review tries to break the paper's central conditional claim by attacking four fronts: benchmark validity, comparison-arm fairness, statistics/cherry-picking, and missing controls. The review is evidence-backed and reproduction-first. I did not edit the paper or benchmark artifacts; I only wrote this report and [`results/v2/adversarial_review.json`](../results/v2/adversarial_review.json).
 
+## Current Status
+
+This is a historical adversarial review plus current-status notes. The first
+finding, the code-task hidden-fixture leak, was valid at audit time but is
+resolved in the current public artifact by the checker hardening documented in
+[`CHECKER_HARDENING.md`](./CHECKER_HARDENING.md). The original `artifact_tmp/`
+cheat files were local audit fixtures and are not release artifacts. The
+remaining findings are retained as limitations, reviewer questions, or future
+work rather than silently removed.
+
 ## Front 1: Benchmark Validity
 
-### FATAL: the four code tasks are not truly hidden-test tasks
+### HISTORICAL FATAL, RESOLVED IN CURRENT ARTIFACT: the four code tasks were not truly hidden-test tasks
 
-The code-task checkers leak their hidden fixtures to candidate code. The candidate process can read the shipped hidden JSON and simply return the expected outputs. This is not a corner case; I re-ran four deliberately broken lookup-table submissions from `artifact_tmp/model_lvup_review/` and each scored `1.0`.
+At audit time, the code-task checkers leaked their hidden fixtures to candidate
+code. The candidate process could read the shipped hidden JSON and simply
+return the expected outputs. This was not a corner case; four deliberately
+broken lookup-table submissions from the local audit directory
+`artifact_tmp/model_lvup_review/` each scored `1.0`.
 
-Evidence:
+Historical local evidence, retained for provenance. The `artifact_tmp/` files
+were not part of the public release artifact and these commands are not public
+rerun commands:
 
 ```bash
 python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_review/cron_cheat_answer.md
@@ -32,7 +48,23 @@ path = Path.cwd() / "bench/v2/tasks/cron_next/reference/hidden_tests.json"
 base = Path(os.environ["PWD"]) / "bench/v2/tasks/table_render/reference"
 ```
 
-This invalidates the claim that those tasks measure code quality under hidden evaluation.
+Current public status: this finding is fixed in the released checker code. The
+current checkers run candidate code from a fresh temp directory with scrubbed
+path/env state, and the public structural validator passes.
+
+Public rerun commands:
+
+```bash
+python3 bench/v2/validate.py
+python3 bench/v2/tasks/cron_next/check.py bench/v2/tasks/cron_next/reference/answer.txt
+python3 bench/v2/tasks/interval_sched/check.py bench/v2/tasks/interval_sched/reference/answer.md
+python3 bench/v2/tasks/table_render/check.py bench/v2/tasks/table_render/reference/answer.md
+python3 bench/v2/tasks/tokenizer_debug/check.py bench/v2/tasks/tokenizer_debug/reference/answer.md
+```
+
+The paper's current limitation text treats the original leak as a
+load-bearing audit finding, states that no evaluated model exploited it, and
+requires reuse with the hardening patch applied.
 
 ### MAJOR: `code_review_12` is regex stuffing, not objective review quality
 
@@ -385,4 +417,13 @@ python3 bench/v2/tasks/cron_next/check.py artifact_tmp/cron_wrapped.txt
 
 ## Bottom Line
 
-The benchmark is not just noisy; parts of it are invalid for the claims being made. The hidden-test code tasks are publicly leakable, one “objective” review task can be keyword-gamed to perfect score, one writing task ignores its own topic semantics, the strongest Sonnet headline depends on excluding a single negative task just below a post-hoc threshold, and the frontier comparison is not equal-scaffolding. The paper still has a narrow within-family descriptive result, but the stronger central pitch is materially overstated in the current artifact.
+The original audit found that the benchmark was not just noisy: parts of it
+were invalid for the stronger claims then being made. In the current public
+artifact, the hidden-fixture leak is resolved by checker hardening, while the
+other issues remain important limitations: one “objective” review task can be
+keyword-gamed to perfect score, one writing task ignores its own topic
+semantics, the strongest Sonnet headline depends on excluding a single negative
+task just below a post-hoc threshold, and the frontier comparison is not
+equal-scaffolding. The paper should therefore be read as a narrow within-family
+descriptive result with explicit limitations, not as a broad claim of frontier
+parity.

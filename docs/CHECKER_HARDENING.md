@@ -40,13 +40,26 @@ After hardening, I re-ran equivalent cheats that attempt to read:
 - `Path.cwd() / "bench/v2/tasks/.../reference/hidden_tests.json"`
 - `Path(os.environ["PWD"]) / "bench/v2/tasks/.../reference/..."`
 
-Commands:
+Historical local audit commands. The `artifact_tmp/model_lvup_hardening/`
+cheat answer files were local hardening fixtures and are not part of the public
+release artifact:
 
 ```bash
 python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_hardening/cron_cheat_answer.md
 python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/model_lvup_hardening/interval_cheat_answer.md
 python3 bench/v2/tasks/table_render/check.py artifact_tmp/model_lvup_hardening/table_cheat_answer.md
 python3 bench/v2/tasks/tokenizer_debug/check.py artifact_tmp/model_lvup_hardening/tokenizer_cheat_answer.md
+```
+
+Public rerun commands for the current artifact are the structural validator
+and the four reference-solution checks:
+
+```bash
+python3 bench/v2/validate.py
+python3 bench/v2/tasks/cron_next/check.py bench/v2/tasks/cron_next/reference/answer.txt
+python3 bench/v2/tasks/interval_sched/check.py bench/v2/tasks/interval_sched/reference/answer.md
+python3 bench/v2/tasks/table_render/check.py bench/v2/tasks/table_render/reference/answer.md
+python3 bench/v2/tasks/tokenizer_debug/check.py bench/v2/tasks/tokenizer_debug/reference/answer.md
 ```
 
 Observed:

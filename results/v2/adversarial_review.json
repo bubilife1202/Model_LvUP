@@ -1,20 +1,29 @@
 [
   {
-    "claim_attacked": "The four v2 code tasks are protected by hidden tests and therefore measure solution quality rather than artifact leakage.",
+    "claim_attacked": "Historical: the four v2 code tasks were protected by hidden tests and therefore measured solution quality rather than artifact leakage.",
     "evidence": [
-      "All four code-task checkers give candidate code direct path access to shipped hidden fixtures: bench/v2/tasks/cron_next/check.py passes reference/hidden_tests.json into the runner; bench/v2/tasks/interval_sched/check.py passes reference/hidden_tests.json; bench/v2/tasks/table_render/check.py passes reference/hidden_cases.json and reference/hidden_expected.json while preserving env=dict(os.environ); bench/v2/tasks/tokenizer_debug/reference/hidden_tests.py reads hidden_cases.json and hidden_expected.json from the repo.",
-      "The shipped cheat submissions under artifact_tmp/model_lvup_review do not solve the tasks. They simply read the hidden fixtures from Path.cwd() or PWD and map inputs to expected outputs. Despite being benchmark leaks rather than solutions, they score perfectly: cron_next 37/37, interval_sched 28/28, table_render 30/30, tokenizer_debug 26/26."
+      "Historical audit finding: before checker hardening, the four code-task checkers gave candidate code path access to shipped hidden fixtures. Local cheat submissions under artifact_tmp/model_lvup_review read those fixtures and scored perfectly: cron_next 37/37, interval_sched 28/28, table_render 30/30, tokenizer_debug 26/26.",
+      "Current public status: the released checker code runs candidates from a fresh temp directory with scrubbed path/env state, as documented in docs/CHECKER_HARDENING.md. The original artifact_tmp cheat files were local audit fixtures and are not public release artifacts.",
+      "Public verification for the current artifact is bench/v2/validate.py plus the four reference-solution checker commands listed in docs/CHECKER_HARDENING.md; these are the rerunnable release checks."
     ],
     "front": 1,
-    "recommended_fix": "Do not ship evaluation hidden fixtures in the public artifact. Run candidate code in a sandbox with no repo visibility and no inherited path/env leak. Split public dev fixtures from private eval fixtures.",
+    "recommended_fix": "Resolved in the current public artifact by checker hardening. Keep the limitation in the paper: reuse should assume the hardened checkers, not the original leaky checker behavior.",
     "reproduction": [
+      "python3 bench/v2/validate.py",
+      "python3 bench/v2/tasks/cron_next/check.py bench/v2/tasks/cron_next/reference/answer.txt",
+      "python3 bench/v2/tasks/interval_sched/check.py bench/v2/tasks/interval_sched/reference/answer.md",
+      "python3 bench/v2/tasks/table_render/check.py bench/v2/tasks/table_render/reference/answer.md",
+      "python3 bench/v2/tasks/tokenizer_debug/check.py bench/v2/tasks/tokenizer_debug/reference/answer.md"
+    ],
+    "severity": "HISTORICAL_FATAL_RESOLVED",
+    "current_status": "resolved_in_current_public_artifact",
+    "historical_reproduction_not_public": [
       "python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_review/cron_cheat_answer.md",
       "python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/model_lvup_review/interval_cheat_answer.md",
       "python3 bench/v2/tasks/table_render/check.py artifact_tmp/model_lvup_review/table_cheat_answer_env.md",
       "python3 bench/v2/tasks/tokenizer_debug/check.py artifact_tmp/model_lvup_review/tokenizer_cheat_answer.md",
       "sed -n '1,220p' artifact_tmp/model_lvup_review/cron_cheat_answer.md artifact_tmp/model_lvup_review/interval_cheat_answer.md artifact_tmp/model_lvup_review/table_cheat_answer_env.md artifact_tmp/model_lvup_review/tokenizer_cheat_answer.md"
-    ],
-    "severity": "FATAL"
+    ]
   },
   {
     "claim_attacked": "code_review_12 is an objective seeded-defect task that rewards real bug findings rather than surface matching.",
