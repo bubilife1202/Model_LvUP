@@ -1,0 +1,5 @@
+{"id":"acct_001","updated_at":"2024-03-01T09:00:00Z","name":"Alice Ng","email":"alice@old.example","status":"trial","tags":[" North ","vip"]}
+{"id":"acct_002","updated_at":"2024-03-01T10:00:00Z","name":"Bob Li","email":"bob@example.com","status":"active","tags":["beta","ops"]}
+{"id":"ACCT 003","updated_at":"2024-03-01T08:30:00Z","name":"Carla","balance_cents":1200}
+{"id":"acct-004","updated_at":"2024-03-01T07:00:00Z","name":"Drew","status":"active","tags":["gold"]}
+{"id":"acct-005","updated_at":"2024-03-01T11:00:00Z","name":"Evan","email":"evan@example.com","status":"hold","tags":["legacy","ops"]}

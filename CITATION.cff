@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite the Model_LvUP preprint and this repository."
+title: "Model_LvUP: RAAR and LvUP-Bench v2 Reproducibility Artifact"
+authors:
+  - family-names: "Park"
+    given-names: "Jinbae"
+repository-code: "https://github.com/bubilife1202/Model_LvUP"
+date-released: "2026-06-30"
+version: "v0.1.0"
+keywords:
+  - large language models
+  - inference-time scaffolding
+  - test-time compute
+  - benchmark
+  - reproducibility
+license: "LicenseRef-research-artifact"

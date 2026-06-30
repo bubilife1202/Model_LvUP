@@ -1,0 +1,25 @@
+{
+  "id": "migration_plan",
+  "category": "operations_planning",
+  "verifiability": "low",
+  "scoring": "judge_rubric",
+  "license": "MIT",
+  "prompt": "Write a practical zero-downtime migration plan for a production PostgreSQL table.\n\nContext and constraints:\n- The source table is 2 TB and is the primary write hot path for the service.\n- Peak traffic is 18,000 writes per second and 40,000 reads per second.\n- The target schema splits one wide table into a new normalized schema, adds two generated columns, and changes the primary key strategy.\n- The service must remain online throughout the migration.\n- Non-negotiable SLOs:\n  1. write availability must stay at or above 99.95%\n  2. read availability must stay at or above 99.99%\n  3. p99 write latency may not increase by more than 25% over baseline\n  4. acknowledged writes must not be lost\n  5. final cutover downtime must be 30 seconds or less\n- Assume you cannot take an exclusive lock on the 2 TB table for more than 30 seconds total.\n- You may choose logical replication, dual-write, change data capture, or another realistic approach, but you must justify the choice.\n\nWhat to include:\n1. A phased migration plan from preflight to cleanup.\n2. The schema-compatibility strategy that lets old and new application versions coexist.\n3. The backfill approach, including batching, throttling, verification, and how lag stays bounded.\n4. The dual-write or change-capture strategy, with reconciliation and idempotency.\n5. The cutover checklist and rollback plan.\n6. Clear abort criteria with numeric thresholds.\n7. The top three operational risks and how you would detect them early.\n\nRequirements:\n- Be specific about locks, indexes, replication lag, validation queries, and rollback.\n- Explain how you would avoid blocking writers for the whole table.\n- Show the tradeoffs of at least two migration approaches before choosing one.\n- Keep the answer between 700 and 1100 words.\n- Output only the plan; no preamble or epilogue.",
+  "difficulty_rationale": [
+    "The plan must stay within strict availability and latency SLOs while touching a 2 TB hot table.",
+    "Zero-downtime migration requires compatibility between old and new application versions, not just a copy job.",
+    "Backfill, CDC or dual-write, reconciliation, and rollback must work together without long locks.",
+    "Operational details such as replication lag, index build strategy, and long-running transactions can invalidate an otherwise plausible plan.",
+    "The cutover budget is only 30 seconds, so sequencing and guardrails must be concrete.",
+    "Numeric abort thresholds force the answer to define measurable stop conditions rather than vague caution.",
+    "A serious plan must weigh at least two migration approaches and justify the chosen tradeoff.",
+    "The word band leaves little room for hand-waving around validation queries, locks, and rollback mechanics."
+  ],
+  "rubric_dims": [
+    "migration sequencing is truly zero-downtime and respects the SLOs",
+    "schema compatibility between old and new application versions is concrete and safe",
+    "backfill, dual-write or CDC, and verification are realistic and internally consistent",
+    "abort criteria and rollback steps are specific, measurable, and safe",
+    "lock management, replication lag, and indexing concerns are handled correctly"
+  ]
+}

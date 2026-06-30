@@ -1,0 +1,110 @@
+[
+  {
+    "id": "S1",
+    "label": "SQL injection in list_jobs",
+    "signatures": [
+      ["sql injection", "list_jobs|owner", "interpolat|%s|format"],
+      ["parameteri[sz].*query|not parameteri[sz]", "owner", "sql"],
+      ["unsafe query|owner = ['\\\"]?%s", "select|query", "injection"]
+    ]
+  },
+  {
+    "id": "S2",
+    "label": "TOCTOU race in claim_next_job",
+    "signatures": [
+      ["race|toctou|check-then-act", "claim_next_job|select.*update", "double.?claim|two workers"],
+      ["without transaction|no transaction", "queued", "running"],
+      ["select.*limit 1", "update jobs", "worker|concurr"]
+    ]
+  },
+  {
+    "id": "S3",
+    "label": "Unhandled None in claim_next_job",
+    "signatures": [
+      ["fetchone\\(\\).*none|row can be none", "claim_next_job", "row\\[.?id.?\\]|none"],
+      ["unhandled none|null", "queued", "crash|exception|typeerror|keyerror"],
+      ["no queued job|empty queue", "row", "id"]
+    ]
+  },
+  {
+    "id": "S4",
+    "label": "Mutable default arg in list_jobs",
+    "signatures": [
+      ["mutable default", "tags=\\[\\]", "list_jobs"],
+      ["default list", "shared across calls|reused", "tags"],
+      ["tags parameter", "mutat|append", "default"]
+    ]
+  },
+  {
+    "id": "S5",
+    "label": "Timezone-naive comparison in should_run",
+    "signatures": [
+      ["naive|timezone-naive", "aware|offset", "utcnow|should_run|run_at"],
+      ["datetime\\.utcnow", "fromisoformat", "typeerror|compare|timezone"],
+      ["timezone", "comparison", "run_at"]
+    ]
+  },
+  {
+    "id": "S6",
+    "label": "Float equality for money in charge_fee",
+    "signatures": [
+      ["float equality|== 0\\.0", "money|balance|fee", "precision|rounding"],
+      ["binary float", "charge_fee", "exact equality|exact compare"],
+      ["currency|monetary", "float", "balance - fee|status = ['\\\"]empty['\\\"]"]
+    ]
+  },
+  {
+    "id": "S7",
+    "label": "Swallowed exception with retry of non-idempotent op",
+    "signatures": [
+      ["swallow.*exception|except exception", "retry", "non-idempotent|receipt|duplicate"],
+      ["retries .* all exceptions|catches everything", "insert into receipts|commit", "double|duplicate"],
+      ["publish_with_retry", "commit before|side effect before", "retry"]
+    ]
+  },
+  {
+    "id": "S8",
+    "label": "Resource leak in export_failed_jobs",
+    "signatures": [
+      ["resource leak|leak", "namedtemporaryfile|temp file", "not close|never close"],
+      ["export_failed_jobs", "file handle", "close"],
+      ["tempfile", "leaked|left open", "export"]
+    ]
+  },
+  {
+    "id": "S9",
+    "label": "Cache poisoning via negative caching in get_job",
+    "signatures": [
+      ["cache.*none|negative cach", "get_job|job_cache", "stale|poison"],
+      ["unknown job", "cached", "later created|never reloaded"],
+      ["job_cache", "none", "invalidate|refresh"]
+    ]
+  },
+  {
+    "id": "S10",
+    "label": "Off-by-one pagination in list_jobs",
+    "signatures": [
+      ["off-by-one|pagination", "offset = page \\*|page\\*page_size", "first page|skip"],
+      ["page numbering", "offset", "50|page_size"],
+      ["list_jobs", "page=1", "starts at second page|skips first"]
+    ]
+  },
+  {
+    "id": "S11",
+    "label": "Unicode/bytes confusion in save_receipt",
+    "signatures": [
+      ["bytes|binary mode", "write\\(text\\)|write str", "typeerror|save_receipt"],
+      ["unicode|text", "wb", "receipt|payload"],
+      ["str.*to binary file|text.*binary", "save_receipt", "encode|bytes"]
+    ]
+  },
+  {
+    "id": "S12",
+    "label": "Lock leaked on one path in append_audit",
+    "signatures": [
+      ["lock", "early return", "not released|deadlock"],
+      ["audit_lock\\.acquire", "return", "release"],
+      ["append_audit", "missing finally|missing unlock", "hang|deadlock"]
+    ]
+  }
+]

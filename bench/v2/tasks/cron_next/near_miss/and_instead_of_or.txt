@@ -1,0 +1,85 @@
+```python
+from datetime import datetime, timedelta
+
+
+FIELD_RANGES = [
+    (0, 59),
+    (0, 23),
+    (1, 31),
+    (1, 12),
+    (0, 6),
+]
+
+
+def _parse_iso(value):
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+
+
+def _format_iso(value):
+    return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _expand_piece(piece, minimum, maximum):
+    if "/" in piece:
+        base, step_text = piece.split("/", 1)
+        step = int(step_text)
+        if base == "*":
+            start, end = minimum, maximum
+        else:
+            start_text, end_text = base.split("-", 1)
+            start, end = int(start_text), int(end_text)
+        return set(range(start, end + 1, step))
+    if piece == "*":
+        return set(range(minimum, maximum + 1))
+    if "-" in piece:
+        start_text, end_text = piece.split("-", 1)
+        start, end = int(start_text), int(end_text)
+        return set(range(start, end + 1))
+    return {int(piece)}
+
+
+def _parse_field(text, minimum, maximum):
+    allowed = set()
+    for piece in text.split(","):
+        allowed.update(_expand_piece(piece, minimum, maximum))
+    return sorted(allowed)
+
+
+def _cron_dow(value):
+    return (value.weekday() + 1) % 7
+
+
+def _date_matches_and_bug(current, dom, dow):
+    return current.day in dom and _cron_dow(current) in dow
+
+
+def next_fire(cron_expr, after_iso):
+    minute_text, hour_text, dom_text, month_text, dow_text = cron_expr.split()
+    minutes = _parse_field(minute_text, *FIELD_RANGES[0])
+    hours = _parse_field(hour_text, *FIELD_RANGES[1])
+    dom = _parse_field(dom_text, *FIELD_RANGES[2])
+    months = _parse_field(month_text, *FIELD_RANGES[3])
+    dow = _parse_field(dow_text, *FIELD_RANGES[4])
+
+    start = _parse_iso(after_iso).replace(second=0, microsecond=0) + timedelta(minutes=1)
+    current_date = start.date()
+    while True:
+        day_anchor = datetime(current_date.year, current_date.month, current_date.day)
+        if day_anchor.month in months and _date_matches_and_bug(day_anchor, dom, dow):
+            for hour in hours:
+                if current_date == start.date() and hour < start.hour:
+                    continue
+                for minute in minutes:
+                    if current_date == start.date() and hour == start.hour and minute < start.minute:
+                        continue
+                    candidate = datetime(
+                        current_date.year,
+                        current_date.month,
+                        current_date.day,
+                        hour,
+                        minute,
+                    )
+                    if candidate >= start:
+                        return _format_iso(candidate)
+        current_date += timedelta(days=1)
+```

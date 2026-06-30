@@ -1,0 +1,25 @@
+{
+  "id": "explain_raft",
+  "category": "technical_explanation",
+  "verifiability": "low",
+  "scoring": "judge_rubric",
+  "license": "MIT",
+  "prompt": "Write an explanation for a backend engineer who knows distributed systems but has not studied Raft internals.\n\nScope:\n- Focus on two Raft safety properties only: log matching and leader completeness.\n- You may briefly define term, log index, commit, and leader election, but do not turn this into a full Raft overview.\n\nRequired content:\n1. A precise explanation of the log matching property and why `AppendEntries(prevLogIndex, prevLogTerm)` enforces it.\n2. A precise explanation of leader completeness, including the election restriction that prevents an outdated candidate from becoming leader.\n3. One concrete running example with a three-node cluster. Use explicit node names, terms, indices, and entries. The example must show a conflicting follower entry being corrected and then show a later election where the out-of-date node loses.\n4. A short section that distinguishes committed vs. merely replicated vs. applied.\n5. At least one subtle misconception to avoid, stated explicitly.\n\nConstraints:\n- Every technical claim must be correct.\n- If you mention “same log prefix,” “same term,” or “majority,” define exactly what you mean.\n- Do not use diagrams or pseudocode.\n- Keep the answer between 700 and 1000 words.\n- Output only the explanation; no preamble or conclusion.",
+  "difficulty_rationale": [
+    "The task isolates two safety properties, so generic Raft summaries waste space and miss precision.",
+    "The running example must stay consistent across terms, indices, and votes while demonstrating both properties.",
+    "Leader completeness depends on the election up-to-date rule, which many explanations state loosely or incorrectly.",
+    "Committed, replicated, and applied must be distinguished explicitly to avoid subtle false claims.",
+    "The word band rewards accuracy and punishes digressions into unrelated Raft topics.",
+    "A single wrong statement about commitment or leader replacement should outweigh style, so the task is accuracy-heavy.",
+    "Because diagrams are forbidden, the prose must carry the full logical structure without hiding behind pictures.",
+    "The misconception clause catches shallow explanations that never confront a common wrong intuition."
+  ],
+  "rubric_dims": [
+    "every Raft claim is technically accurate",
+    "log matching is stated precisely and tied correctly to AppendEntries checks",
+    "leader completeness and the election restriction are stated precisely",
+    "the running example is concrete, consistent, and demonstrates both properties",
+    "committed vs replicated vs applied are clearly and correctly distinguished"
+  ]
+}

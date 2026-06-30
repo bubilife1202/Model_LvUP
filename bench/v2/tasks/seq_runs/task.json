@@ -1,0 +1,19 @@
+{
+  "id": "seq_runs",
+  "category": "math",
+  "verifiability": "high",
+  "scoring": "Score is 1.0 iff the last line matching `FINAL ANSWER: <integer>` gives the exact count after commas are removed; otherwise the score is 0.0.",
+  "near_miss_policy": "exact_zero_allowed",
+  "license": "MIT",
+  "prompt": "Count the number of sequences `(a1, ..., a9)` of length 9 over the alphabet `{1, 2, 3, 4, 5, 6}` that satisfy all of the following constraints.\\n\\n1. Every maximal run of equal symbols has length at most 2. A maximal run is a contiguous block of one or more equal entries that cannot be extended to the left or right by the same symbol. Equivalently, no symbol may appear three times in a row.\\n2. The total sum `a1 + ... + a9` is congruent to 4 modulo 9, meaning the sum leaves remainder 4 when divided by 9.\\n3. The consecutive pattern `1, 3, 1` never appears: there is no index `i` in `{1, 2, ..., 7}` such that `ai = 1`, `a(i+1) = 3`, and `a(i+2) = 1`.\\n\\nCompute the exact number of such sequences. Return an integer, not a formula. You may include brief reasoning.\\nend your response with a line 'FINAL ANSWER: <integer>'",
+  "difficulty_rationale": [
+    "The run constraint allows doubles but forbids triples, so solutions that ban every repeated adjacent value undercount immediately.",
+    "The phrase 'maximal run' is global to each block; a local scan must still correctly interpret that `x,x` is allowed while `x,x,x` is not.",
+    "The modulo condition uses the symbol values 1 through 6, not zero-based labels or position indices.",
+    "The total-sum filter is applied only after all 9 positions are chosen, so informal casework that does not track residues exactly is brittle.",
+    "The forbidden pattern is specifically the consecutive triple `1,3,1`; counts that exclude any occurrence of 1 next to 3 or any nonconsecutive subsequence 1-3-1 solve a different problem.",
+    "Occurrences of `1,3,1` can overlap, for example in `1,3,1,3,1`, so one-off exclusion reasoning can miss multiple bad windows.",
+    "The three constraints interact: a sequence can satisfy the run rule and the modulo rule while still being invalid because of `1,3,1`, so inclusion-exclusion by inspection is error-prone.",
+    "Because the length is 9 and the alphabet has 6 symbols, the raw search space is `6^9 = 10,077,696`, which is large enough that hand enumeration or ad hoc symmetry arguments are easy to get wrong."
+  ]
+}

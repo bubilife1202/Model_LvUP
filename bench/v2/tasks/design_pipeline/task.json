@@ -1,0 +1,25 @@
+{
+  "id": "design_pipeline",
+  "category": "system_design",
+  "verifiability": "low",
+  "scoring": "judge_rubric",
+  "license": "MIT",
+  "prompt": "Write a technical design memo for a global event-ingestion pipeline.\n\nContext and constraints:\n- The system must ingest 200,000 events per second sustained across three active-active regions.\n- Peak load can rise to 300,000 events per second for up to 10 minutes.\n- Average event size is 1 KiB; 95th percentile size is 4 KiB.\n- Events are keyed by `tenant_id`. Ordering must be preserved per tenant, but global ordering is not required.\n- Exactly-once semantics are required for accepted events: if the same event ID is delivered multiple times, the system must durably store it once and produce one downstream effect once, even if producers retry, workers crash, or one region is lost.\n- Duplicate deliveries, out-of-order retries, transient timeouts, and a full outage of one region must all be handled safely.\n- Assume network partitions between regions are possible and may last long enough to force degraded operation.\n\nWhat to include:\n1. A concise problem statement and your explicit assumptions.\n2. The chosen architecture and at least two rejected alternatives.\n3. A capacity plan with arithmetic for ingress, durable storage, replication, network, replay, and headroom.\n4. The exact backpressure policy at low, medium, high, and saturation load, and how that policy changes during a regional outage.\n5. The replay and deduplication strategy, including how event IDs, offsets, checkpoints, or transaction markers are managed.\n6. The failover and recovery story for a single-region loss, process crashes, and producer retries.\n7. The top three operational risks and mitigations.\n\nRequirements:\n- Be concrete, quantitative, and internally consistent.\n- Show the arithmetic, not just the conclusions.\n- Do not hand-wave exactly-once semantics; define how duplicates are prevented end-to-end.\n- Keep the answer between 900 and 1300 words.\n- Output only the memo; no preamble or epilogue.",
+  "difficulty_rationale": [
+    "Exactly-once semantics across retries, crashes, and regional loss force an end-to-end idempotency story rather than a slogan.",
+    "The capacity plan must include burst traffic, replication overhead, replay bandwidth, and headroom arithmetic.",
+    "Backpressure rules must be safe during both normal overload and one-region outage, which changes the effective regional budget.",
+    "Per-tenant ordering constrains partitioning and replay strategy.",
+    "A weak design can look plausible while collapsing under cross-region partitions or duplicate producer retries.",
+    "The word band is long enough to reward depth but short enough that hand-waving crowds out required details.",
+    "Rejected alternatives must be honest and quantitative instead of ornamental.",
+    "Operational risks must be concrete enough that arithmetic mistakes and control-plane blind spots are visible."
+  ],
+  "rubric_dims": [
+    "capacity math is correct and explicitly tied to stated assumptions",
+    "exactly-once semantics are defined end-to-end without contradictions",
+    "backpressure and overload behavior are safe and realistic",
+    "replay and failover handling remain correct during a regional loss",
+    "tradeoffs and operational risks are concrete and implementable"
+  ]
+}

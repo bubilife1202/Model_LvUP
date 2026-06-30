@@ -1,0 +1,23 @@
+1. `list_jobs` builds the owner predicate with string interpolation instead of a parameterized query, so it has a SQL injection bug. A crafted `owner` value can change the `SELECT` and return jobs it should never see.
+
+2. `claim_next_job` has a race / TOCTOU problem because it does `SELECT ... LIMIT 1` and then `UPDATE jobs` without a transaction or lock. Two workers can select the same queued row and both mark it running, so one job gets double-claimed.
+
+3. `claim_next_job` also has an unhandled `None` path. If `fetchone()` returns `None` because there is no queued job, `row["id"]` crashes immediately instead of producing a clean no-work result.
+
+4. `list_jobs` uses `tags=[]` as a mutable default argument and then mutates it with `append`. That default list is reused across calls, so filters leak between requests and later queries inherit stale tags.
+
+5. `should_run` compares a potentially aware `run_at` value from `datetime.fromisoformat` against `datetime.utcnow()`, which is timezone-naive. Mixed aware/naive comparison can raise a `TypeError` or evaluate the schedule in the wrong timezone.
+
+6. `charge_fee` uses binary `float` arithmetic and exact equality `== 0.0` to make a money decision. Rounding error can leave a tiny residue or overshoot, so the account status flips incorrectly for a balance/fee pair that should land exactly at zero.
+
+7. `publish_with_retry` catches everything and the retry loop runs even after a non-idempotent side effect has already happened. It does `INSERT INTO receipts` and commit before calling `save_receipt`, so a later failure can make retry attempts create duplicate receipts for one logical publish.
+
+8. `export_failed_jobs` leaks a resource because the `NamedTemporaryFile` handle is returned without being closed. That file handle can remain open and leave buffered data or descriptors hanging around.
+
+9. `get_job` poisons the cache with a negative result by storing `None` in `JOB_CACHE`. If the job is inserted later, the worker keeps serving the cached miss and never refreshes or invalidates it.
+
+10. `list_jobs` has an off-by-one pagination bug because `offset = page * PAGE_SIZE`. With `page=1`, the first page starts at row 50 instead of row 0, so the first page of jobs is skipped.
+
+11. `save_receipt` opens the output file in binary mode `wb` and then tries to `write(text)` where `text` is a Python `str`. That Unicode/bytes mismatch raises a `TypeError`, so receipts fail to save.
+
+12. `append_audit` acquires `audit_lock` and has an early return path where the lock is not released. One blank line can leave the lock held forever and deadlock or hang later audit writes.

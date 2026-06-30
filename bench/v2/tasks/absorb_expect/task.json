@@ -1,0 +1,19 @@
+{
+  "id": "absorb_expect",
+  "category": "math",
+  "verifiability": "high",
+  "scoring": "exact_match_last_final_answer",
+  "near_miss_policy": "exact_zero_allowed",
+  "license": "MIT",
+  "prompt": "A token starts at state 6 on the state set {0,1,2,3,4,5,6}. State 0 is absorbing.\n\nFor each step taken from a current state i > 0, a cost equal to i is incurred BEFORE the token moves on that step. The process stops at the first visit to state 0, so no cost is ever incurred from state 0.\n\nThe transition rule is:\n- from 6: to 6 with probability 1/4, to 5 with probability 1/2, to 4 with probability 1/4\n- from 5: to 5 with probability 1/6, to 4 with probability 1/2, to 3 with probability 1/3\n- from 4: to 4 with probability 1/5, to 3 with probability 2/5, to 2 with probability 2/5\n- from 3: to 3 with probability 1/6, to 2 with probability 1/2, to 1 with probability 1/3\n- from 2: to 2 with probability 1/4, to 1 with probability 1/2, to 0 with probability 1/4\n- from 1: to 1 with probability 1/3, to 0 with probability 2/3\n\nFind the exact expected total cost accumulated until the first visit to state 0.\n\nOutput requirements:\n- Your answer must be a single reduced fraction p/q with positive integers p and q.\n- The fraction must already be in lowest terms.\n- Do not give a decimal approximation instead of the fraction.\n- Only the last line that begins with FINAL ANSWER: will be graded.\n\nend your response with a line 'FINAL ANSWER: p/q'",
+  "difficulty_rationale": [
+    "The cost is charged before each move from state i > 0; charging cost after the move produces a different expectation.",
+    "Every nonzero state has a self-loop, so a one-pass downward recursion without isolating the self-loop term gives the wrong equations.",
+    "The target quantity is expected total cost, not expected number of steps, so each state contributes a different per-step weight.",
+    "The process stops at the first visit to 0, which means state 0 contributes no cost and no outgoing behavior whatsoever.",
+    "The answer must be an exact reduced fraction; decimal approximations or unreduced equivalents should be rejected.",
+    "The checker uses only the last FINAL ANSWER line, so extra earlier candidate answers do not help.",
+    "Several transition rows have three branches with different denominators, making arithmetic slips in first-step analysis likely.",
+    "Because the chain only moves to the same or lower states, a careful solver can exploit lower-triangular structure, but using the wrong state order breaks back-substitution."
+  ]
+}

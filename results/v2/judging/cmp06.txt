@@ -1,0 +1,238 @@
+You are an expert judge comparing two anonymous answers to the same task.
+Judge ONLY on these rubric dimensions:
+- capacity math is correct and explicitly tied to stated assumptions
+- exactly-once semantics are defined end-to-end without contradictions
+- backpressure and overload behavior are safe and realistic
+- replay and failover handling remain correct during a regional loss
+- tradeoffs and operational risks are concrete and implementable
+
+Ignore length and stylistic flourishes except where the task explicitly requires them.
+Penalize technical inaccuracies heavily.
+
+=== TASK ===
+Write a technical design memo for a global event-ingestion pipeline.
+
+Context and constraints:
+- The system must ingest 200,000 events per second sustained across three active-active regions.
+- Peak load can rise to 300,000 events per second for up to 10 minutes.
+- Average event size is 1 KiB; 95th percentile size is 4 KiB.
+- Events are keyed by `tenant_id`. Ordering must be preserved per tenant, but global ordering is not required.
+- Exactly-once semantics are required for accepted events: if the same event ID is delivered multiple times, the system must durably store it once and produce one downstream effect once, even if producers retry, workers crash, or one region is lost.
+- Duplicate deliveries, out-of-order retries, transient timeouts, and a full outage of one region must all be handled safely.
+- Assume network partitions between regions are possible and may last long enough to force degraded operation.
+
+What to include:
+1. A concise problem statement and your explicit assumptions.
+2. The chosen architecture and at least two rejected alternatives.
+3. A capacity plan with arithmetic for ingress, durable storage, replication, network, replay, and headroom.
+4. The exact backpressure policy at low, medium, high, and saturation load, and how that policy changes during a regional outage.
+5. The replay and deduplication strategy, including how event IDs, offsets, checkpoints, or transaction markers are managed.
+6. The failover and recovery story for a single-region loss, process crashes, and producer retries.
+7. The top three operational risks and mitigations.
+
+Requirements:
+- Be concrete, quantitative, and internally consistent.
+- Show the arithmetic, not just the conclusions.
+- Do not hand-wave exactly-once semantics; define how duplicates are prevented end-to-end.
+- Keep the answer between 900 and 1300 words.
+- Output only the memo; no preamble or epilogue.
+
+=== ANSWER A ===
+MEMO: Technical Design — Global Event-Ingestion Pipeline
+
+TO: Platform Engineering
+FROM: Systems Architecture
+DATE: 2026-06-12
+SUBJECT: Architecture and Operational Design for High-Throughput Event Ingestion
+
+---
+
+**1. Problem Statement and Assumptions**
+
+We must ingest events from multi-tenant producers at 200,000 events/second (EPS) sustained globally, peaking at 300,000 EPS for up to 10 minutes, across three active-active regions. Average event size is 1 KiB; P95 is 4 KiB. Per-tenant ordering must be preserved; global ordering is not required. Exactly-once semantics are required end-to-end.
+
+Explicit assumptions: (a) Producers respect HTTP 429 responses. (b) Each region is an independent failure domain with local durable storage. (c) Cross-region replication latency is ≤150 ms under normal conditions. (d) Downstream consumers accept replay from any region. (e) Event IDs are globally unique UUIDs assigned by producers before transmission. (f) Tenant count is ≤100,000; per-tenant partition assignment is stable within a region.
+
+---
+
+**2. Chosen Architecture and Rejected Alternatives**
+
+**Chosen: Partitioned log per region with cross-region async replication and distributed deduplication store.**
+
+Each region runs a Kafka cluster partitioned by `tenant_id` hash (256 partitions per cluster), preserving per-tenant ordering without imposing global ordering. A stateless ingestion gateway performs deduplication using a Redis Cluster with atomic NX operations before writing to Kafka. Cross-region replication uses Kafka MirrorMaker 2, which queues durably when a remote region is unreachable and replays on reconnection. Downstream workers use Kafka transactional consumers with idempotent effect-store writes.
+
+**Rejected Alternative 1 — Single global Kafka cluster.** A single cluster creates a replication bottleneck and blast radius spanning all tenants. Cross-continental latency (80–150 ms) forces large linger configurations hurting tail latency, and local writes become impossible during a network partition, violating the active-active requirement.
+
+**Rejected Alternative 2 — Queue-per-tenant (SQS-style individual queues).** At 100,000 tenants this creates 100,000 queue resources per region; metadata overhead exceeds operational limits on most managed services. Partition compaction and offset management become unmanageable, and rebalancing during scale events is impractical.
+
+---
+
+**3. Capacity Plan**
+
+**Blended average event size (P95 correction):**
+0.95 × 1 KiB + 0.05 × 4 KiB = 0.95 + 0.20 = 1.15 KiB blended average.
+
+**Per-region ingress (global load divided evenly across three regions):**
+Sustained per region: (200,000 EPS / 3) × 1.15 KiB = 66,667 × 1.15 KiB = 76,667 KiB/s ≈ 74.9 MiB/s.
+Peak per region: (300,000 EPS / 3) × 1.15 KiB = 100,000 × 1.15 KiB = 115,000 KiB/s ≈ 112.3 MiB/s.
+
+**Durable storage rate (per region, 72-hour retention):**
+Raw write rate: 74.9 MiB/s × 3,600 s/hr × 72 hr = 74.9 × 259,200 ≈ 19,414,080 MiB ≈ 18.5 TiB per replica.
+With intra-region replication factor 3: 18.5 TiB × 3 = 55.5 TiB per region raw.
+Provision 85 TiB per region → headroom: 85 / 55.5 − 1 ≈ 53%.
+
+**Cross-region replication network:**
+Each region replicates to two peers: 74.9 MiB/s × 2 = 149.8 MiB/s sustained egress per region.
+Peak: 112.3 MiB/s × 2 = 224.6 MiB/s egress per region.
+Provision 2 × 2 Gbps (each 2 Gbps ≈ 238.4 MiB/s; combined ≈ 476.8 MiB/s) dedicated inter-region links per region, yielding 2.1× headroom over peak egress.
+
+**Headroom summary:** Storage +53%, network 2.1× over peak, gateway compute provisioned for 200,000 EPS per region (50% above single-region peak of 133,333 EPS) via horizontal auto-scaling.
+
+---
+
+**4. Backpressure Policy**
+
+- **Low (<60% gateway capacity, <45 MiB/s per region):** Accept all events; HTTP 200, no throttling. Idempotency checks run synchronously inline.
+- **Medium (60–80%, 45–60 MiB/s):** Return HTTP 429 with `Retry-After: 2` for the slowest 20% of tenants by current volume. Producer SDKs increase retry backoff by 2×. Internal buffer limits raised; no traffic shed yet.
+- **High (80–95%, 60–71 MiB/s):** Enforce per-tenant rate limits based on partition backlog depth. Tenants exceeding fair-share quota receive HTTP 429 with `Retry-After: 5`. Premium tenants receive 2× allocation before shedding begins. Alert on-call.
+- **Saturation (>95%, >71 MiB/s or producer ack timeout):** Shed lowest-priority tenants with HTTP 503. Pin critical tenants to reserved-capacity partitions. Dead-letter queue captures rejected event metadata for producer reconciliation.
+
+**During regional outage:** Each surviving region absorbs half of the lost region's load: 74.9 MiB/s + (74.9 MiB/s / 2) = 74.9 + 37.5 = 112.4 MiB/s, equal to provisioned peak capacity. Per-region EPS rises from 66,667 to 100,000, which is 50% of the 200,000 EPS gateway provision. Medium-load policy activates immediately on surviving regions regardless of local metrics, preventing lag accumulation before auto-scale completes. Anycast DNS reroutes producers within 30 seconds. Replication to the offline region queues durably on MirrorMaker 2 and replays automatically on reconnection.
+
+---
+
+**5. Replay and Deduplication Strategy**
+
+Each event carries a producer-assigned `event_id` (UUID v4). At the ingestion gateway, before writing to Kafka, an atomic Redis `SET event_id 1 NX PX 259200000` (72-hour TTL matching retention) executes. If the key exists, the gateway returns HTTP 200 without producing to Kafka, blocking duplicate ingestion.
+
+If absent, the event is written to Kafka inside a producer transaction. Downstream workers use Kafka transactional consumers: the consumer reads a batch, writes effects via `INSERT ... ON CONFLICT (event_id) DO NOTHING`, then commits the Kafka offset atomically in the same transaction. If a worker crashes before committing, it re-reads from the last committed offset; the idempotent insert absorbs re-processing without producing duplicate downstream effects. Consumer group offsets are checkpointed every 5 seconds, bounding replay to at most 5 seconds of events on restart.
+
+Cross-region deduplication: before writing to a peer region's local Kafka, the regional gateway executes the same Redis NX check on the destination store, preventing double-writes from concurrent multi-region producers.
+
+---
+
+**6. Failover and Recovery**
+
+**Single-region loss:** Anycast DNS shifts producers to surviving regions within 30 seconds (health-check interval 10 s, TTL 20 s). MirrorMaker 2 maintains continuous replicas of all topic partitions; consumers on surviving regions continue from replicated offsets with no gap for already-mirrored events. On recovery, MirrorMaker 2 re-syncs the delta; the recovering region replays through the effect store, which absorbs all duplicates via `ON CONFLICT DO NOTHING`, before rejoining the active-active ring.
+
+**Process crashes:** Kafka leader election promotes a replica within 10 seconds. Gateway instances are stateless; the load balancer removes unhealthy instances within 5 seconds. Workers restart from last committed checkpoint, re-processing at most 5 seconds of events; transactional writes ensure no partial effects are visible.
+
+**Producer retries:** Producers include the original `event_id` on every retry. The Redis NX gate returns HTTP 200 for recognized duplicates; no duplicate Kafka message is produced and no duplicate downstream effect occurs. Producers using `enable.idempotence=true` also receive broker-side deduplication via producer epoch and sequence number.
+
+---
+
+**7. Top Three Operational Risks and Mitigations**
+
+**Risk 1 — Idempotency store failure opens duplicate path.** If Redis becomes unavailable, duplicate filtering fails. Mitigation: Deploy Redis Cluster with 3 primaries and synchronous replicas per AZ. Configure the gateway to fail closed (HTTP 503) rather than fail open when the store is unreachable, accepting brief unavailability over a correctness violation. Alert on Redis p99 latency exceeding 10 ms; run quarterly game-day exercises killing nodes under peak load.
+
+**Risk 2 — Replication lag exceeding TTL during extended partition.** If cross-region replication pauses beyond 72 hours, idempotency store TTLs expire, enabling duplicate writes on replay. Mitigation: Alert at 48-hour lag; automatically extend TTL to 168 hours when lag exceeds 12 hours; enforce a mandatory deduplication reconciliation job before marking a recovered region writable.
+
+**Risk 3 — Hot-tenant partition skew saturating individual brokers.** A tenant generating disproportionate volume concentrates traffic on one partition. Mitigation: Detect tenants exceeding 2,000 EPS per region and apply sub-tenant sharding via a rotating shard suffix (tenant_id:0, tenant_id:1, ...), preserving ordering within each shard. Monitor per-partition byte rate; auto-rebalance when any partition exceeds 80% utilization for 5 consecutive minutes.
+
+=== ANSWER B ===
+# Technical Design Memo: Global Event-Ingestion Pipeline
+
+**To:** Engineering Leadership
+**Subject:** Architecture for Global Event-Ingestion Pipeline
+**Date:** 2026-06-12
+
+---
+
+## 1. Problem Statement and Assumptions
+
+We require a globally distributed event-ingestion system sustaining 200,000 events/s across three active-active regions (us-east-1, eu-west-1, ap-southeast-1), with bursts to 300,000 events/s for up to 10 minutes. Events average 1 KiB; p95 is 4 KiB. Per-tenant ordering must be preserved; global ordering is not required. Exactly-once delivery semantics must hold across producer retries, worker crashes, and full regional loss.
+
+**Assumptions:**
+- Tenants are pre-sharded; tenant_id hashing is stable and known at ingest time.
+- Producers are outside our control and may retry indefinitely with the same event ID.
+- "Accepted" means durably written to at least two regions before acknowledging to the producer.
+- Downstream consumers are stream processors reading from a durable log; consumer-side idempotency is separately enforced.
+- A regional outage means all nodes in that region are unreachable for up to 72 hours.
+- Clock skew across regions is bounded to 500ms (NTP + PTP).
+
+---
+
+## 2. Architecture
+
+**Chosen: Partitioned Durable Log with Cross-Region Synchronous Replication and Centralized Deduplication Index**
+
+Each region runs a Kafka cluster sized for local peak load. Inbound traffic is accepted by a stateless ingestion gateway that assigns a monotonic sequence number per tenant shard, checks a deduplication store, and writes to the local Kafka partition. Kafka is configured with `acks=all` and `min.insync.replicas=2`. Cross-region replication uses a synchronous two-phase commit via a thin coordination layer: an event is acknowledged to the producer only after it is committed in at least two of three regions.
+
+A distributed deduplication store (Apache Cassandra with LWT—lightweight transactions) holds `(tenant_id, event_id) → (region, offset, timestamp)` with a 72-hour TTL matching our outage SLA. Each ingestion gateway performs a conditional insert: if the row already exists, the write is dropped and the original offset is returned to the producer.
+
+**Rejected Alternative 1: Single-Region Primary with Async Fan-Out.** Simpler operationally but violates the exactly-once guarantee under primary failure: events acknowledged by the primary but not yet replicated are lost. Also introduces a single point of latency bottleneck.
+
+**Rejected Alternative 2: CRDTs / Eventual-Consistency Merge.** Would allow independent writes in each region without coordination, but CRDTs cannot enforce exactly-once for non-commutative operations. Merging duplicate event IDs from split-brain partitions produces undefined ordering within a tenant's stream.
+
+---
+
+## 3. Capacity Plan
+
+**Ingress bandwidth:**
+- Sustained: 200,000 events/s × 1 KiB = 200 MiB/s globally; ~67 MiB/s per region.
+- Burst (10 min): 300,000 × 1 KiB = 300 MiB/s; ~100 MiB/s per region.
+- p95 sizing check: 200,000 × 0.05 × 4 KiB + 200,000 × 0.95 × 1 KiB = 40 MiB/s + 190 MiB/s = 230 MiB/s effective average bandwidth. Provision gateways for 350 MiB/s per region (1.5× p95 burst headroom).
+
+**Kafka partitions per region:**
+- Target: ≤5 MiB/s per partition (conservative Kafka guideline). 350 MiB/s ÷ 5 MiB/s = 70 partitions. Round to 128 for power-of-two alignment and future tenant growth.
+
+**Durable storage (7-day retention):**
+- 200 MiB/s × 86,400 s × 7 days = ~117 TiB raw per region. With 3× replication factor within a region: ~351 TiB per region. Three regions: ~1.05 PiB total. Using NVMe storage at $0.10/GiB/month ≈ $105K/month storage cost; use tiered storage (S3 offload after 24 hours) to reduce to ~$18K/month.
+
+**Deduplication index:**
+- 200,000 events/s × 72 h × 3,600 s/h = ~51.8 billion rows. Each row ≈ 64 bytes (IDs + offset + timestamp) = ~3.3 TiB per region. Cassandra with 3-node clusters per region handles this comfortably with bloom filters.
+
+**Cross-region replication network:**
+- Each event written twice cross-region: 200 MiB/s × 2 = 400 MiB/s inter-region egress per region. Three regions: 400 × 3 = 1.2 Gbps total inter-region. Provision 2 Gbps inter-region links per region pair with burst to 3 Gbps.
+
+**Replay bandwidth:** Assuming 1% of events need replay: 2,000 events/s × 4 KiB (p95) = 8 MiB/s replay traffic, negligible against ingress headroom.
+
+---
+
+## 4. Backpressure Policy
+
+**Low load (<50% capacity, <100 MiB/s per region):** Gateway accepts all events, targets p99 acknowledgment latency ≤50ms. No throttling.
+
+**Medium load (50–80%, 100–160 MiB/s):** Gateway enables producer-side rate hints via response headers (`X-Ingest-Throttle: mild`). Producers reduce send rate by 10%. Deduplication store TTL check is moved off the hot path via async read-ahead cache.
+
+**High load (80–95%, 160–190 MiB/s):** Gateway enforces per-tenant token buckets at 80% of each tenant's contracted rate. New connections beyond 10K concurrent are queued with a 2s timeout. Response latency SLO relaxed to p99 ≤200ms.
+
+**Saturation (>95% or >190 MiB/s):** Gateway returns HTTP 429 to lowest-priority tenants (configurable tier). Core-tier tenants continue at reduced rate; surplus events are shed. No buffering beyond Kafka's own replication buffer to avoid compounding lag.
+
+**During regional outage:** The two surviving regions each absorb ~50% of the failed region's traffic (load balancer failover via DNS/anycast within 30s). Capacity headroom was sized for this: 200 MiB/s total rerouted onto two regions at 100 MiB/s each, within burst capacity (100 MiB/s per region). The two-of-three quorum degrades to two-of-two (strict): no events acknowledged unless both surviving regions commit. This preserves exactly-once at the cost of higher latency. Tenants whose shard-leader was in the failed region enter a 5s election period; producers receive 503 and should retry with exponential backoff (max 60s).
+
+---
+
+## 5. Replay and Deduplication
+
+Each event carries a producer-assigned `event_id` (UUIDv7, which encodes timestamp). The ingestion gateway performs:
+
+1. **Dedup check:** Cassandra LWT `INSERT IF NOT EXISTS (tenant_id, event_id) VALUES (region, kafka_offset, now())`. On conflict, return 200 with original offset—idempotent acknowledgment.
+2. **Write to Kafka:** If dedup succeeds, write to the tenant's assigned partition. Kafka offset is stored back into the Cassandra row atomically via a follow-up CAS update.
+3. **Cross-region replication:** The coordination layer writes the event to both peer regions' Kafka clusters before sending final ACK to producer. Each peer region also upserts into its own dedup store.
+
+**Checkpoints:** Downstream consumers commit Kafka offsets to a Zookeeper-backed offset store after processing. Consumers re-read from the last committed offset on restart; Cassandra dedup prevents double-processing effects downstream.
+
+**Replay:** To replay a tenant's stream, consumers seek to a prior Kafka offset. The dedup store is not consulted during replay (replay is an intentional re-read); idempotency of downstream effects is the consumer's responsibility, enforced by documented consumer API contract.
+
+---
+
+## 6. Failover and Recovery
+
+**Single-region loss:** DNS/anycast routes producers to surviving regions within 30s. The failed region's Kafka partitions have replicas in the other two regions (cross-region mirror topics with in-sync replica tracking). The surviving regions elect new leaders for orphaned partitions. No data loss because ACK required two-of-three commits. Recovery: when the region returns, it replays from the cross-region mirror to rebuild its local Kafka log, then rejoins quorum. Estimated rebuild time: 3.3 TiB dedup index + 24h Kafka retention = ~6 hours at 200 MiB/s ingest with 20% spare bandwidth for catch-up.
+
+**Process crashes:** Kafka guarantees durability for committed offsets. The gateway is stateless; crashed instances are replaced by autoscaling within 60s. In-flight requests that had not received ACK will be retried by producers and caught by dedup.
+
+**Producer retries:** Handled entirely by the dedup LWT. A retry with the same event_id receives a 200 with the original offset. Retries with different event_ids (producer bug) are accepted as new events.
+
+---
+
+## 7. Top Three Operational Risks
+
+**Risk 1: Cassandra LWT contention at peak.** LWT throughput is limited to ~5K writes/s per partition. With 200K events/s and 128 partitions, that is ~1,562 LWT writes/s per partition—manageable, but a hot tenant could create a hot partition. **Mitigation:** Consistent hash sharding of the dedup keyspace by tenant_id with virtual nodes; circuit-break tenants exceeding 500 LWT/s/partition.
+
+**Risk 2: Cross-region network partition causing ACK stall.** If the inter-region link degrades, two-of-three quorum stalls. **Mitigation:** Per-region circuit breaker; if quorum cannot be reached within 2s, gateway downgrades to one-of-three (local commit only) and marks events as "unconfirmed." These events are reconciled when connectivity restores via a background reconciliation job that replays unconfirmed offsets to peer regions and resolves dedup conflicts by event_id.
+
+**Risk 3: Dedup TTL expiry before producer retry window closes.** A producer retrying an event after 72 hours will have its dedup record expired, causing re-acceptance. **Mitigation:** Producer SLA contract requires retries within 24 hours; producers exceeding this window receive a distinct error code (410 Gone) and must treat the event as permanently dropped or generate a new event_id.
+
+Briefly compare the answers dimension by dimension, then end your reply with exactly one line: "WINNER: A" or "WINNER: B" or "WINNER: TIE".

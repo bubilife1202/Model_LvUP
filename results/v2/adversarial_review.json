@@ -1,0 +1,247 @@
+[
+  {
+    "claim_attacked": "The four v2 code tasks are protected by hidden tests and therefore measure solution quality rather than artifact leakage.",
+    "evidence": [
+      "All four code-task checkers give candidate code direct path access to shipped hidden fixtures: bench/v2/tasks/cron_next/check.py passes reference/hidden_tests.json into the runner; bench/v2/tasks/interval_sched/check.py passes reference/hidden_tests.json; bench/v2/tasks/table_render/check.py passes reference/hidden_cases.json and reference/hidden_expected.json while preserving env=dict(os.environ); bench/v2/tasks/tokenizer_debug/reference/hidden_tests.py reads hidden_cases.json and hidden_expected.json from the repo.",
+      "The shipped cheat submissions under /private/tmp/model_lvup_review do not solve the tasks. They simply read the hidden fixtures from Path.cwd() or PWD and map inputs to expected outputs. Despite being benchmark leaks rather than solutions, they score perfectly: cron_next 37/37, interval_sched 28/28, table_render 30/30, tokenizer_debug 26/26."
+    ],
+    "front": 1,
+    "recommended_fix": "Do not ship evaluation hidden fixtures in the public artifact. Run candidate code in a sandbox with no repo visibility and no inherited path/env leak. Split public dev fixtures from private eval fixtures.",
+    "reproduction": [
+      "python3 bench/v2/tasks/cron_next/check.py /private/tmp/model_lvup_review/cron_cheat_answer.md",
+      "python3 bench/v2/tasks/interval_sched/check.py /private/tmp/model_lvup_review/interval_cheat_answer.md",
+      "python3 bench/v2/tasks/table_render/check.py /private/tmp/model_lvup_review/table_cheat_answer_env.md",
+      "python3 bench/v2/tasks/tokenizer_debug/check.py /private/tmp/model_lvup_review/tokenizer_cheat_answer.md",
+      "sed -n '1,220p' /private/tmp/model_lvup_review/cron_cheat_answer.md /private/tmp/model_lvup_review/interval_cheat_answer.md /private/tmp/model_lvup_review/table_cheat_answer_env.md /private/tmp/model_lvup_review/tokenizer_cheat_answer.md"
+    ],
+    "severity": "FATAL"
+  },
+  {
+    "claim_attacked": "code_review_12 is an objective seeded-defect task that rewards real bug findings rather than surface matching.",
+    "evidence": [
+      "bench/v2/tasks/code_review_12/check.py explicitly says the checker is 'not semantic understanding' and scores only regex-conjunction recall against seeds.json signatures.",
+      "A deliberately bogus answer that begins every item with 'This is not a real defect' still scores 1.0, matching all S1..S12, because the checker only looks for keyword bundles."
+    ],
+    "front": 1,
+    "recommended_fix": "Require structured outputs tied to seeded defect IDs plus exact location/failure fields, add precision penalties for false alarms, or reclassify the task as semi-automatic/human-audited instead of fully objective.",
+    "reproduction": [
+      "python3 bench/v2/tasks/code_review_12/check.py /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
+      "sed -n '1,200p' /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
+      "sed -n '1,240p' bench/v2/tasks/code_review_12/check.py",
+      "sed -n '1,240p' bench/v2/tasks/code_review_12/reference/seeds.json"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "constrained_writing_16 is an authoritative objective task rather than a pure constraint/format game.",
+    "evidence": [
+      "The prompt says 'Write a single paragraph about a fictional weather station', but bench/v2/tasks/constrained_writing_16/check.py only checks 16 mechanical constraints and never verifies topic or fictionality.",
+      "The off-topic paragraph in /private/tmp/model_lvup_review/constrained_off_topic.txt is about bakers, runners, lanterns, platform 7, and theater, not a fictional weather station, yet it scores 16/16."
+    ],
+    "front": 1,
+    "recommended_fix": "Either remove the semantic/topic claim from the prompt and paper, or move this task to judged or medium-verifiability scoring with human topicality checks.",
+    "reproduction": [
+      "python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_off_topic.txt",
+      "sed -n '1,200p' /private/tmp/model_lvup_review/constrained_off_topic.txt",
+      "sed -n '1,220p' bench/v2/tasks/constrained_writing_16/task.json",
+      "sed -n '1,220p' bench/v2/tasks/constrained_writing_16/check.py"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The objective tasks are cleanly specified natural prompts rather than prompt-serialization traps.",
+    "evidence": [
+      "Several task prompts contain literal backslash-n sequences instead of actual line breaks after JSON parsing. The loaded prompt strings for cron_next, perm_constraints, and seq_runs contain '\\\\n' but zero actual newline characters; tokenizer_debug and code_review_12 mix real newlines with literal '\\\\n'.",
+      "This means the benchmark is partially measuring whether the model can mentally decode escaped formatting rather than simply solving the stated task."
+    ],
+    "front": 1,
+    "recommended_fix": "Normalize all model-facing prompts so formatting is represented with actual newlines, then regenerate results. If escaped formatting was intentional, disclose that the task tests prompt-decoding robustness.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json, pathlib\nfor path in sorted(pathlib.Path('bench/v2/tasks').glob('*/task.json')):\n    obj=json.loads(path.read_text())\n    p=obj['prompt']\n    if '\\\\n' in p:\n        print(obj['id'],'literal_backslash_n',p.count('\\\\n'),'actual_newline',p.count('\\n'))\nPY",
+      "python3 - <<'PY'\nimport json\nfor task in ['seq_runs','perm_constraints','cron_next']:\n    p=json.load(open(f'bench/v2/tasks/{task}/task.json'))['prompt']\n    print(task, 'contains actual newline', '\\n' in p, 'contains backslash-n literal', '\\\\n' in p)\n    print(repr(p[:160]))\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The benchmark's strict format requirements are checked consistently and proportionally.",
+    "evidence": [
+      "records_merge exact-line scoring makes semantically identical outputs fail. Re-serializing the reference objects with compact separators scores 0.0; using sorted keys scores only 0.25, even though the JSON content is semantically equivalent.",
+      "Conversely, interval_sched and cron_next accept outputs that violate the prompt's 'ONLY one Python code block and nothing else' rule. Wrapping the reference answer with preamble/postscript still scores 1.0 because the checker extracts the last code block and ignores surrounding text."
+    ],
+    "front": 1,
+    "recommended_fix": "Decide whether the benchmark is judging semantics or exact serialization. If semantics matter, canonicalize before comparison. If exact serialization matters, then code-task checkers should also reject extra text instead of silently accepting it.",
+    "reproduction": [
+      "python3 bench/v2/tasks/records_merge/check.py /tmp/records_compact.jsonl",
+      "python3 bench/v2/tasks/records_merge/check.py /tmp/records_sorted.jsonl",
+      "python3 bench/v2/tasks/interval_sched/check.py /tmp/interval_wrapped.md",
+      "python3 bench/v2/tasks/cron_next/check.py /tmp/cron_wrapped.txt"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "Every objective checker deterministically maps any answer to a score in [0,1].",
+    "evidence": [
+      "bench/v2/tasks/constrained_writing_16/check.py calls next(ch for ch in sentence if ch.isalpha()) with no fallback. A malformed six-sentence answer containing no alphabetic characters raises RuntimeError: generator raised StopIteration instead of returning a score."
+    ],
+    "front": 1,
+    "recommended_fix": "Guard the next(...) call and mark the corresponding constraint false when a sentence contains no alphabetic character.",
+    "reproduction": [
+      "python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_no_alpha.txt"
+    ],
+    "severity": "MINOR"
+  },
+  {
+    "claim_attacked": "base-direct is a fair single-pass baseline for arguing that the scaffold is load-bearing.",
+    "evidence": [
+      "harness/lvup_runner_v2.js already tells base to answer directly. base-direct adds an extra handicap: 'Answer immediately and directly... do not produce lengthy deliberation.' That is not merely 'RAAR minus stages'; it is also 'base minus deliberation.'",
+      "On the 11 common Sonnet primary tasks, the mean macros are base 0.730, base-direct 0.478, selfrefine 0.901, bo10 0.794, and raar 0.820."
+    ],
+    "front": 2,
+    "recommended_fix": "Add a neutral single-call control that removes only the staged scaffold while keeping the ordinary prompt free to deliberate.",
+    "reproduction": [
+      "nl -ba harness/lvup_runner_v2.js | sed -n '34,36p'",
+      "python3 - <<'PY'\nimport json\nfrom pathlib import Path\nfrom collections import defaultdict\nruns=json.loads(Path('results/v2/all_runs.scored.json').read_text())\nper=defaultdict(lambda: defaultdict(list))\nfor r in runs:\n    if r.get('model')=='sonnet' and r.get('arm') in {'base','base-direct','selfrefine','bo10','raar'} and 'score' in r:\n        per[r['task']][r['arm']].append(r['score'])\ncommon=[t for t,a in per.items() if all(k in a for k in ['base','base-direct','selfrefine','bo10','raar'])]\nfor arm in ['base','base-direct','selfrefine','bo10','raar']:\n    vals=[sum(per[t][arm])/len(per[t][arm]) for t in common]\n    print(arm, round(sum(vals)/len(vals),3))\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "bo10 is a clean call-matched control showing that RAAR's gains are not just compute.",
+    "evidence": [
+      "bo10 uses ten identical-prompt generations plus one selector call. RAAR uses a rubric call, three directive-diversified candidates, three adversarial reviews, one fusion call, and up to two gate/revise cycles. bo10 roughly matches call count but does not match privileged task decomposition or verifier structure.",
+      "Measured call budgets from the artifact are base 1, base-direct 1, selfrefine 5, bo10 11, and raar 9-12."
+    ],
+    "front": 2,
+    "recommended_fix": "Add structure-factored controls such as bo3+rubric, bo3+verifier, and bo10-with-verifier so the active ingredient is isolated rather than bundled.",
+    "reproduction": [
+      "nl -ba harness/lvup_runner_v2.js | sed -n '72,111p'",
+      "python3 - <<'PY'\nimport json\nfrom pathlib import Path\nfrom collections import defaultdict\nruns=json.loads(Path('results/v2/all_runs.scored.json').read_text())\nby=defaultdict(set)\nfor r in runs:\n    if 'score' in r:\n        by[f\"{r['arm']}@{r['model']}\"] .add(r.get('calls'))\nfor k in ['base@sonnet','base-direct@sonnet','selfrefine@sonnet','bo10@sonnet','raar@sonnet']:\n    print(k, sorted(x for x in by[k] if x is not None))\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "RAAR vs non-RAAR judged comparisons fairly measure end-to-end judged quality.",
+    "evidence": [
+      "analysis/v2_judging/gen_comparisons.py includes only runs with answer is not None and then pairs arms with zip(left_runs, right_runs). Failed generations disappear entirely, and extra successful samples on one side are silently dropped.",
+      "Example: design_pipeline has a failed no-answer row for raar@sonnet seed 0 in all_runs.scored.json, but the judged manifest only contains completed seed-paired comparisons."
+    ],
+    "front": 2,
+    "recommended_fix": "Report judged results both completion-conditional and failure-inclusive, and stop pairing with zip so asymmetrical completion counts are visible instead of silently discarded.",
+    "reproduction": [
+      "nl -ba analysis/v2_judging/gen_comparisons.py | sed -n '59,114p'",
+      "python3 - <<'PY'\nimport json\nfrom pathlib import Path\nruns=json.loads(Path('results/v2/all_runs.scored.json').read_text())\nfor r in runs:\n    if r.get('excluded') and r['task'] in {'design_pipeline','explain_raft','migration_plan'}:\n        print(r['task'], r['arm'], r['model'], r['seed'], r.get('calls'), r['excluded'])\nmanifest=json.loads(Path('results/v2/judging/manifest.json').read_text())\nfor m in manifest:\n    if m['task']=='design_pipeline' and m['pair']==['raar@sonnet','base@sonnet']:\n        print(m)\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "RAAR is being compared to base under the same information budget apart from extra calls.",
+    "evidence": [
+      "The rubric stage explicitly asks the model to generate 8-12 binary criteria covering correctness, exact output-format requirements, and 'the most likely failure modes for this kind of task' before any candidate exists. Those criteria are then injected into all three candidate-generation prompts and into the verifier/fusion prompts.",
+      "This is not mere extra compute; it is privileged task decomposition and failure-mode hinting that base never receives."
+    ],
+    "front": 2,
+    "recommended_fix": "If the paper wants a 'same information, more compute' claim, add controls where base and boN receive the same rubric/failure-mode hints but no adversarial refinement.",
+    "reproduction": [
+      "nl -ba harness/lvup_runner_v2.js | sed -n '38,44p'",
+      "nl -ba harness/lvup_runner_v2.js | sed -n '82,100p'"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The headline Sonnet 0.733 gap-closure figure is a stable summary rather than a post-hoc cherry-picked slice.",
+    "evidence": [
+      "The 0.05 headroom rule removes exactly one negative task: code_review_12 has Fable-over-Sonnet denominator 0.041667 and Sonnet RAAR numerator -0.027778. With threshold 0.05 it is excluded; with thresholds 0.0 or 0.02 it is included and the mean gap closure drops from 0.733 to 0.500.",
+      "If closure is computed at the aggregate macro level across all 10 common scored tasks instead of mean-of-per-task-ratios on the post-hoc slice, Sonnet closure is only 0.419."
+    ],
+    "front": 3,
+    "recommended_fix": "Pre-register the headroom rule or report the full threshold sweep and pooled macro-ratio alongside the filtered mean-of-ratios. The current headline should be demoted to a sensitivity analysis.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json\nfrom collections import defaultdict\nruns=json.load(open('results/v2/all_runs.scored.json'))\ncell=defaultdict(list)\nfor r in runs:\n    if isinstance(r.get('score'), (int,float)) and not isinstance(r.get('score'), bool):\n        cell[(r['task'], f\"{r['arm']}@{r['model']}\")].append(float(r['score']))\nmeans={k: sum(v)/len(v) for k,v in cell.items()}\ncommon=[]\nfor task in sorted({t for t,_ in means}):\n    need=['base@sonnet','raar@sonnet','base@fable']\n    if all((task,k) in means for k in need):\n        denom=means[(task,'base@fable')]-means[(task,'base@sonnet')]\n        num=means[(task,'raar@sonnet')]-means[(task,'base@sonnet')]\n        common.append((task,denom,num))\nfor thr in [0.0,0.02,0.05,0.10]:\n    vals=[num/den for _,den,num in common if den>thr]\n    tasks=[t for t,den,_ in common if den>thr]\n    print('threshold',thr,'n',len(vals),'mean',sum(vals)/len(vals) if vals else None,'tasks',tasks)\nnum=sum(num for _,den,num in common)\nden=sum(den for _,den,num in common)\nprint('pooled_closure', num/den)\nPY"
+    ],
+    "severity": "FATAL"
+  },
+  {
+    "claim_attacked": "The Sonnet gap-closure estimate is numerically precise enough to support a strong verbal claim.",
+    "evidence": [
+      "The filtered estimate uses only 5 tasks, one per-task closure exceeds 1.0 (interval_sched = 1.1667), and the reported 95% bootstrap CI runs above complete closure: [0.300, 1.067].",
+      "At threshold 0.0 or 0.02 the CI becomes [-0.056, 0.972], which includes negative improvement. The inference is therefore highly unstable to one task and one threshold change."
+    ],
+    "front": 3,
+    "recommended_fix": "Reduce the rhetoric. With n=5 and a ratio metric that can exceed 1, the result supports at most a tentative directional claim.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json,random\nstats=json.load(open('results/v2/stats.json'))\nvals=[stats['gap_closure']['sonnet']['per_task'][t]['value'] for t in sorted(stats['gap_closure']['sonnet']['per_task'])]\nprint('filtered_vals', vals)\nprint('reported_ci', stats['gap_closure']['sonnet']['overall']['ci95'])\nfrom collections import defaultdict\nruns=json.load(open('results/v2/all_runs.scored.json'))\ncell=defaultdict(list)\nfor r in runs:\n    if isinstance(r.get('score'), (int,float)) and not isinstance(r.get('score'), bool):\n        cell[(r['task'], f\"{r['arm']}@{r['model']}\")].append(float(r['score']))\nmeans={k: sum(v)/len(v) for k,v in cell.items()}\ncommon=[]\nfor task in sorted({t for t,_ in means}):\n    need=['base@sonnet','raar@sonnet','base@fable']\n    if all((task,k) in means for k in need):\n        den=means[(task,'base@fable')]-means[(task,'base@sonnet')]\n        num=means[(task,'raar@sonnet')]-means[(task,'base@sonnet')]\n        if den>0:\n            common.append((task,den,num,num/den))\ndef pct(arr,p):\n    pos=(len(arr)-1)*(p/100.0)\n    lo=int(pos); hi=min(lo+1,len(arr)-1); frac=pos-lo\n    return arr[lo]*(1-frac)+arr[hi]*frac\nfor thr in [0.0,0.02,0.05,0.10]:\n    vals=[c for _,d,_,c in common if d>thr]\n    rng=random.Random(999+int(thr*1000))\n    boots=[]\n    for _ in range(10000):\n        draw=[vals[rng.randrange(len(vals))] for _ in range(len(vals))]\n        boots.append(sum(draw)/len(draw))\n    boots.sort()\n    print('thr',thr,'n',len(vals),'mean',sum(vals)/len(vals),'ci',[pct(boots,2.5),pct(boots,97.5)])\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The statistics summarize a clean, complete comparison matrix.",
+    "evidence": [
+      "results/v2/all_runs.scored.json contains duplicate (task, arm, model, seed) keys with both failed no-answer rows and successful rows, plus scoreless cells that load_runs/build_tables silently ignore.",
+      "Example duplicates include (absorb_expect, raar, fable, 0), (code_review_12, raar, fable, 0), (design_pipeline, raar, sonnet, 0), (perm_constraints, base, fable, 0), and (seq_runs, base, fable, 0). The stats code averages only numeric score rows, so collection failures disappear from the summary."
+    ],
+    "front": 3,
+    "recommended_fix": "Deduplicate the run artifact explicitly, report completion/failure rates alongside means, and decide whether no-answer failures are missing data or arm outcomes before computing macro summaries.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json\nfrom collections import Counter,defaultdict\nruns=json.load(open('results/v2/all_runs.scored.json'))\nctr=Counter((r['task'],r['arm'],r['model'],r.get('seed')) for r in runs)\nfor k,v in sorted((k,v) for k,v in ctr.items() if v>1):\n    print(v,k)\nrows=defaultdict(list)\nfor r in runs:\n    rows[(r['task'],r['arm'],r['model'],r.get('seed'))].append(r)\nfor key,items in sorted(rows.items()):\n    if len(items)>1:\n        print('KEY',key)\n        for it in items:\n            print(' ',it.get('answer') is None,it.get('score'),it.get('excluded'),it.get('calls'))\nPY",
+      "sed -n '77,156p' analysis/v2_stats.py"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "One tier down plus RAAR approaches frontier quality in a fair scaffold-vs-scaffold sense.",
+    "evidence": [
+      "The headline comparison is Sonnet+RAAR vs Fable base, not Sonnet+RAAR vs Fable+RAAR. The released raar@fable objective slice covers only 5 task means / 6 scored rows, while base@fable covers 10 task means / 19 scored rows.",
+      "Without a completed equal-scaffolding frontier matrix, the result supports only 'Sonnet+RAAR approaches unscaffolded Fable base on a filtered subset', not a general frontier-equivalence claim."
+    ],
+    "front": 4,
+    "recommended_fix": "Complete the equal-scaffolding frontier matrix on the same 11 primary objective tasks and 3 judged tasks, then move the main comparison to raar@sonnet vs raar@fable.",
+    "reproduction": [
+      "rg -n \"0\\.733|0\\.137 below Fable|raar@fable 0.967\" paper/main.tex README.md",
+      "python3 - <<'PY'\nimport json\nstats=json.load(open('results/v2/stats.json'))\nfor key in ['base@fable','raar@fable','base@sonnet','raar@sonnet']:\n    row=stats['macro'][key]\n    print(key,row['mean'],row['n_tasks'])\nPY",
+      "python3 - <<'PY'\nimport json\nfrom collections import defaultdict\nruns=json.load(open('results/v2/all_runs.scored.json'))\nper=defaultdict(list)\nfor r in runs:\n    if r['model'] in {'fable','sonnet'} and r['arm'] in {'base','raar'}:\n        per[(r['task'],r['arm'],r['model'])].append(r.get('score'))\nfor key in sorted(per):\n    vals=[v for v in per[key] if v is not None]\n    print(key,'scored_rows',len(vals),'all_rows',len(per[key]))\nPY"
+    ],
+    "severity": "FATAL"
+  },
+  {
+    "claim_attacked": "The paper has enough controls to identify the active ingredient behind any RAAR advantage.",
+    "evidence": [
+      "The artifact has bo10, selfrefine, raar-norubric, and raar-approval, but no verifier-only, rubric-only, or bo10-with-verifier arms. paper/main.tex itself says 'Fully call-matched, fully completed component ablations remain future work.'",
+      "At current n, selfrefine is numerically stronger than raar on common Sonnet tasks (0.901 vs 0.820) and all arm-vs-raar permutation tests are non-significant, so the mechanism story is undercontrolled."
+    ],
+    "front": 4,
+    "recommended_fix": "Add verifier-only, rubric-only, and bo10-with-verifier controls on the same seed/task matrix so the loop's ingredients can be isolated rather than bundled.",
+    "reproduction": [
+      "rg -n \"Fully call-matched, fully completed component ablations remain future work|Self-Refine\" paper/main.tex",
+      "python3 - <<'PY'\nimport json\nstats=json.load(open('results/v2/stats.json'))\nfor key in ['raar@sonnet','selfrefine@sonnet','bo10@sonnet','raar-approval@sonnet','raar-norubric@sonnet']:\n    row=stats['macro'][key]\n    print(key,row['mean'],row['n_tasks'])\nfor row in stats['permutation_tests']:\n    if row['b']=='raar@sonnet' and row['a'] in {'selfrefine@sonnet','bo10@sonnet','raar-approval@sonnet','raar-norubric@sonnet'}:\n        print(row)\nPY"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The current judged and filtered objective results are robust enough without deeper replication.",
+    "evidence": [
+      "base-direct@sonnet has only one seed, most Sonnet ablations have one or two seeds per task, and the headline gap-closure slice has only five tasks.",
+      "The judged tail has 14 generation pairs, 28 blinded comparisons, and 56 verdicts total; frontier cells contribute only four judgments per completed pair. There is no human evaluation."
+    ],
+    "front": 4,
+    "recommended_fix": "Run at least 5 seeds on the key objective slice, add a temperature/seed robustness pass, and add blinded human evaluation for the three judged tasks.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json\nfrom collections import defaultdict\nruns=json.load(open('results/v2/all_runs.scored.json'))\nagg=defaultdict(lambda:[set(),set()])\nfor r in runs:\n    k=f\"{r['arm']}@{r['model']}\"\n    agg[k][0].add(r.get('seed'))\n    agg[k][1].add(r['task'])\nfor k in ['base-direct@sonnet','selfrefine@sonnet','bo10@sonnet','raar-approval@sonnet','raar-norubric@sonnet','raar@sonnet']:\n    print(k,'seeds',sorted(agg[k][0]),'tasks',len(agg[k][1]))\nPY",
+      "python3 analysis/v2_judging/aggregate_judgments.py results/v2/judging",
+      "rg -n \"only a proxy for expert human evaluation|56 total verdicts|4 judgments\" paper/main.tex"
+    ],
+    "severity": "MAJOR"
+  },
+  {
+    "claim_attacked": "The study's conclusions generalize beyond the Claude-family generator setup.",
+    "evidence": [
+      "The generation arms in all_runs.scored.json are restricted to haiku, sonnet, opus, and fable. GPT-5.5 appears only as a judge in the judged artifact, not as a generation arm.",
+      "That is enough for a within-family deployment claim, but not for a broader statement that RAAR generally closes model-tier gaps."
+    ],
+    "front": 4,
+    "recommended_fix": "Add at least one non-Claude generator family under the same no-tools protocol, or keep the conclusion explicitly within-family.",
+    "reproduction": [
+      "python3 - <<'PY'\nimport json\nruns=json.load(open('results/v2/all_runs.scored.json'))\nprint(sorted({r['model'] for r in runs}))\nPY",
+      "rg -n \"GPT-5.5 appears only|No GPT-5.5 generation arm\" paper/main.tex"
+    ],
+    "severity": "MINOR"
+  }
+]

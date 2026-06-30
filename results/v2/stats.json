@@ -1,0 +1,1633 @@
+{
+  "degradation": {
+    "base-direct@sonnet": {
+      "count": 6,
+      "rate": 0.5454545454545454,
+      "total_compared": 11
+    },
+    "base@fable": {
+      "count": 2,
+      "rate": 0.10526315789473684,
+      "total_compared": 19
+    },
+    "base@haiku": {
+      "count": 5,
+      "rate": 0.22727272727272727,
+      "total_compared": 22
+    },
+    "base@opus": {
+      "count": 0,
+      "rate": 0.0,
+      "total_compared": 11
+    },
+    "base@sonnet": {
+      "count": 6,
+      "rate": 0.17647058823529413,
+      "total_compared": 34
+    },
+    "bo10@sonnet": {
+      "count": 2,
+      "rate": 0.125,
+      "total_compared": 16
+    },
+    "raar-approval@sonnet": {
+      "count": 2,
+      "rate": 0.13333333333333333,
+      "total_compared": 15
+    },
+    "raar-norubric@sonnet": {
+      "count": 2,
+      "rate": 0.13333333333333333,
+      "total_compared": 15
+    },
+    "raar@fable": {
+      "count": 0,
+      "rate": 0.0,
+      "total_compared": 6
+    },
+    "raar@haiku": {
+      "count": 3,
+      "rate": 0.1875,
+      "total_compared": 16
+    },
+    "raar@sonnet": {
+      "count": 6,
+      "rate": 0.18181818181818182,
+      "total_compared": 33
+    },
+    "selfrefine@sonnet": {
+      "count": 4,
+      "rate": 0.23529411764705882,
+      "total_compared": 17
+    }
+  },
+  "gap_closure": {
+    "fable": {
+      "overall": {
+        "ci95": null,
+        "mean": null,
+        "n_tasks": 0
+      },
+      "per_task": {}
+    },
+    "haiku": {
+      "overall": {
+        "ci95": [
+          -0.11111111111111173,
+          0.638888888888889
+        ],
+        "mean": 0.3042005420054199,
+        "n_tasks": 9
+      },
+      "per_task": {
+        "absorb_expect": {
+          "denominator": 1.0,
+          "numerator": 1.0,
+          "value": 1.0
+        },
+        "code_review_12": {
+          "denominator": 0.33333333333333326,
+          "numerator": 0.08333333333333326,
+          "value": 0.24999999999999983
+        },
+        "cron_next": {
+          "denominator": 0.05405405405405406,
+          "numerator": 0.0,
+          "value": 0.0
+        },
+        "csv_normalize": {
+          "denominator": 0.9761904761904762,
+          "numerator": 0.47619047619047616,
+          "value": 0.4878048780487805
+        },
+        "digit_count": {
+          "denominator": 1.0,
+          "numerator": 0.5,
+          "value": 0.5
+        },
+        "interval_sched": {
+          "denominator": 0.07142857142857151,
+          "numerator": 0.03571428571428581,
+          "value": 0.5000000000000008
+        },
+        "records_merge": {
+          "denominator": 1.0,
+          "numerator": 0.0,
+          "value": 0.0
+        },
+        "seq_runs": {
+          "denominator": 1.0,
+          "numerator": 1.0,
+          "value": 1.0
+        },
+        "tokenizer_debug": {
+          "denominator": 0.11538461538461531,
+          "numerator": -0.11538461538461553,
+          "value": -1.000000000000002
+        }
+      }
+    },
+    "opus": {
+      "overall": {
+        "ci95": null,
+        "mean": null,
+        "n_tasks": 0
+      },
+      "per_task": {}
+    },
+    "sonnet": {
+      "overall": {
+        "ci95": [
+          0.3,
+          1.0666666666666667
+        ],
+        "mean": 0.7333333333333333,
+        "n_tasks": 5
+      },
+      "per_task": {
+        "absorb_expect": {
+          "denominator": 1.0,
+          "numerator": 1.0,
+          "value": 1.0
+        },
+        "csv_normalize": {
+          "denominator": 0.09523809523809523,
+          "numerator": 0.09523809523809523,
+          "value": 1.0
+        },
+        "digit_count": {
+          "denominator": 0.6666666666666667,
+          "numerator": 0.3333333333333333,
+          "value": 0.49999999999999994
+        },
+        "interval_sched": {
+          "denominator": 0.2142857142857143,
+          "numerator": 0.25,
+          "value": 1.1666666666666665
+        },
+        "seq_runs": {
+          "denominator": 0.33333333333333337,
+          "numerator": 0.0,
+          "value": 0.0
+        }
+      }
+    }
+  },
+  "inputs": [
+    "results/v2/all_runs.scored.json"
+  ],
+  "macro": {
+    "base-direct@sonnet": {
+      "ci95": [
+        0.20562770562770563,
+        0.7510822510822511
+      ],
+      "mean": 0.47835497835497837,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 0.0,
+        "code_review_12": 0.5,
+        "cron_next": 1.0,
+        "csv_normalize": 0.7619047619047619,
+        "digit_count": 0.0,
+        "interval_sched": 1.0,
+        "perm_constraints": 0.0,
+        "records_merge": 1.0,
+        "seq_runs": 0.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.0
+      }
+    },
+    "base@fable": {
+      "ci95": [
+        0.9298076923076921,
+        1.0
+      ],
+      "mean": 0.9717490842490841,
+      "n_tasks": 10,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.7916666666666666,
+        "cron_next": 1.0,
+        "csv_normalize": 1.0,
+        "digit_count": 1.0,
+        "interval_sched": 0.9642857142857143,
+        "records_merge": 1.0,
+        "seq_runs": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "base@haiku": {
+      "ci95": [
+        0.12982625482625482,
+        0.6348878598878598
+      ],
+      "mean": 0.3757969507969508,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 0.0,
+        "code_review_12": 0.45833333333333337,
+        "cron_next": 0.9459459459459459,
+        "csv_normalize": 0.023809523809523808,
+        "digit_count": 0.0,
+        "interval_sched": 0.8928571428571428,
+        "perm_constraints": 0.0,
+        "records_merge": 0.0,
+        "seq_runs": 0.0,
+        "table_render": 0.9666666666666667,
+        "tokenizer_debug": 0.8461538461538463
+      }
+    },
+    "base@opus": {
+      "ci95": [
+        0.4101731601731602,
+        0.9077589077589078
+      ],
+      "mean": 0.6794039294039295,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.75,
+        "cron_next": 1.0,
+        "csv_normalize": 0.7619047619047619,
+        "digit_count": 0.0,
+        "interval_sched": 1.0,
+        "perm_constraints": 0.0,
+        "records_merge": 1.0,
+        "seq_runs": 0.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "base@sonnet": {
+      "ci95": [
+        0.5478861416361417,
+        0.8685897435897436
+      ],
+      "mean": 0.7214972527472527,
+      "n_tasks": 12,
+      "task_means": {
+        "absorb_expect": 0.0,
+        "code_review_12": 0.75,
+        "constrained_writing_16": 0.625,
+        "cron_next": 1.0,
+        "csv_normalize": 0.9047619047619048,
+        "digit_count": 0.3333333333333333,
+        "interval_sched": 0.75,
+        "perm_constraints": 0.6666666666666666,
+        "records_merge": 1.0,
+        "seq_runs": 0.6666666666666666,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "bo10@sonnet": {
+      "ci95": [
+        0.5381628787878788,
+        0.9813519813519814
+      ],
+      "mean": 0.7935814185814185,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 0.0,
+        "code_review_12": 0.8333333333333333,
+        "cron_next": 1.0,
+        "csv_normalize": 0.023809523809523808,
+        "digit_count": 1.0,
+        "interval_sched": 0.9107142857142857,
+        "perm_constraints": 1.0,
+        "records_merge": 1.0,
+        "seq_runs": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "raar-approval@sonnet": {
+      "ci95": [
+        0.718906093906094,
+        0.951048951048951
+      ],
+      "mean": 0.8406593406593406,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 0.5,
+        "code_review_12": 0.75,
+        "constrained_writing_16": 0.625,
+        "cron_next": 1.0,
+        "csv_normalize": 1.0,
+        "digit_count": 0.5,
+        "interval_sched": 0.9107142857142857,
+        "perm_constraints": 1.0,
+        "records_merge": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "raar-norubric@sonnet": {
+      "ci95": [
+        0.6401515151515151,
+        0.9734848484848484
+      ],
+      "mean": 0.8336247086247085,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.7083333333333333,
+        "constrained_writing_16": 0.625,
+        "cron_next": 1.0,
+        "csv_normalize": 1.0,
+        "digit_count": 0.0,
+        "interval_sched": 0.875,
+        "perm_constraints": 1.0,
+        "records_merge": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "raar@fable": {
+      "ci95": [
+        0.9,
+        1.0
+      ],
+      "mean": 0.9666666666666668,
+      "n_tasks": 5,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.8333333333333334,
+        "csv_normalize": 1.0,
+        "digit_count": 1.0,
+        "interval_sched": 1.0
+      }
+    },
+    "raar@haiku": {
+      "ci95": [
+        0.4246586746586747,
+        0.851102726102726
+      ],
+      "mean": 0.6497230247230248,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.5416666666666666,
+        "cron_next": 0.9459459459459459,
+        "csv_normalize": 0.5,
+        "digit_count": 0.5,
+        "interval_sched": 0.9285714285714286,
+        "perm_constraints": 0.0,
+        "records_merge": 0.0,
+        "seq_runs": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.7307692307692307
+      }
+    },
+    "raar@sonnet": {
+      "ci95": [
+        0.6914918414918414,
+        0.9374514374514376
+      ],
+      "mean": 0.8197358197358199,
+      "n_tasks": 11,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.7222222222222223,
+        "cron_next": 1.0,
+        "csv_normalize": 1.0,
+        "digit_count": 0.6666666666666666,
+        "interval_sched": 1.0,
+        "perm_constraints": 0.6666666666666666,
+        "records_merge": 0.3333333333333333,
+        "seq_runs": 0.6666666666666666,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    },
+    "selfrefine@sonnet": {
+      "ci95": [
+        0.7450396825396827,
+        0.9856532356532357
+      ],
+      "mean": 0.8725389194139194,
+      "n_tasks": 12,
+      "task_means": {
+        "absorb_expect": 1.0,
+        "code_review_12": 0.5833333333333334,
+        "constrained_writing_16": 0.5625,
+        "cron_next": 1.0,
+        "csv_normalize": 0.9523809523809523,
+        "digit_count": 1.0,
+        "interval_sched": 0.4107142857142857,
+        "perm_constraints": 1.0,
+        "records_merge": 1.0,
+        "seq_runs": 1.0,
+        "table_render": 1.0,
+        "tokenizer_debug": 0.9615384615384616
+      }
+    }
+  },
+  "permutation_tests": [
+    {
+      "a": "raar@haiku",
+      "b": "base@haiku",
+      "contrast": "raar@haiku vs base@haiku",
+      "n_tasks": 11,
+      "observed_diff": 0.2739260739260739,
+      "p_value": 0.0420957904209579,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "raar@sonnet",
+      "b": "base@sonnet",
+      "contrast": "raar@sonnet vs base@sonnet",
+      "n_tasks": 11,
+      "observed_diff": 0.08946608946608947,
+      "p_value": 0.521047895210479,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "raar@opus",
+      "b": "base@opus",
+      "contrast": "raar@opus vs base@opus",
+      "n_tasks": 0,
+      "observed_diff": null,
+      "p_value": null,
+      "permutations": 10000,
+      "tasks": []
+    },
+    {
+      "a": "raar@fable",
+      "b": "base@fable",
+      "contrast": "raar@fable vs base@fable",
+      "n_tasks": 5,
+      "observed_diff": 0.015476190476190487,
+      "p_value": 0.49805019498050196,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched"
+      ]
+    },
+    {
+      "a": "raar@sonnet",
+      "b": "base@fable",
+      "contrast": "raar@sonnet vs base@fable",
+      "n_tasks": 10,
+      "observed_diff": -0.13670634920634922,
+      "p_value": 0.1267873212678732,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "base-direct@sonnet",
+      "b": "raar@sonnet",
+      "contrast": "base-direct@sonnet vs raar@sonnet",
+      "n_tasks": 11,
+      "observed_diff": -0.34138084138084135,
+      "p_value": 0.060993900609939006,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "bo10@sonnet",
+      "b": "raar@sonnet",
+      "contrast": "bo10@sonnet vs raar@sonnet",
+      "n_tasks": 11,
+      "observed_diff": -0.02615440115440113,
+      "p_value": 0.9281071892810719,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "raar-approval@sonnet",
+      "b": "raar@sonnet",
+      "contrast": "raar-approval@sonnet vs raar@sonnet",
+      "n_tasks": 10,
+      "observed_diff": 0.027182539682539687,
+      "p_value": 0.8121187881211879,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "raar-norubric@sonnet",
+      "b": "raar@sonnet",
+      "contrast": "raar-norubric@sonnet vs raar@sonnet",
+      "n_tasks": 10,
+      "observed_diff": 0.01944444444444444,
+      "p_value": 1.0,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    },
+    {
+      "a": "selfrefine@sonnet",
+      "b": "raar@sonnet",
+      "contrast": "selfrefine@sonnet vs raar@sonnet",
+      "n_tasks": 11,
+      "observed_diff": 0.080988455988456,
+      "p_value": 0.44415558444155584,
+      "permutations": 10000,
+      "tasks": [
+        "absorb_expect",
+        "code_review_12",
+        "cron_next",
+        "csv_normalize",
+        "digit_count",
+        "interval_sched",
+        "perm_constraints",
+        "records_merge",
+        "seq_runs",
+        "table_render",
+        "tokenizer_debug"
+      ]
+    }
+  ],
+  "run_count": 267,
+  "task_arm_model": {
+    "absorb_expect": {
+      "base-direct@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "base@opus": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.0,
+        "n": 3,
+        "scores": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.5,
+        "n": 2,
+        "scores": [
+          0.0,
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "raar@fable": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "code_review_12": {
+      "base-direct@sonnet": {
+        "mean": 0.5,
+        "n": 1,
+        "scores": [
+          0.5
+        ]
+      },
+      "base@fable": {
+        "mean": 0.7916666666666666,
+        "n": 2,
+        "scores": [
+          0.6666666666666666,
+          0.9166666666666666
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.45833333333333337,
+        "n": 2,
+        "scores": [
+          0.4166666666666667,
+          0.5
+        ]
+      },
+      "base@opus": {
+        "mean": 0.75,
+        "n": 1,
+        "scores": [
+          0.75
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.75,
+        "n": 3,
+        "scores": [
+          0.75,
+          0.9166666666666666,
+          0.5833333333333334
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 0.8333333333333333,
+        "n": 2,
+        "scores": [
+          0.75,
+          0.9166666666666666
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.75,
+        "n": 2,
+        "scores": [
+          0.8333333333333334,
+          0.6666666666666666
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 0.7083333333333333,
+        "n": 2,
+        "scores": [
+          0.6666666666666666,
+          0.75
+        ]
+      },
+      "raar@fable": {
+        "mean": 0.8333333333333334,
+        "n": 1,
+        "scores": [
+          0.8333333333333334
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.5416666666666666,
+        "n": 2,
+        "scores": [
+          0.6666666666666666,
+          0.4166666666666667
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.7222222222222223,
+        "n": 3,
+        "scores": [
+          0.8333333333333334,
+          0.5833333333333334,
+          0.75
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 0.5833333333333334,
+        "n": 2,
+        "scores": [
+          0.5833333333333334,
+          0.5833333333333334
+        ]
+      }
+    },
+    "constrained_writing_16": {
+      "base@sonnet": {
+        "mean": 0.625,
+        "n": 1,
+        "scores": [
+          0.625
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.625,
+        "n": 1,
+        "scores": [
+          0.625
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 0.625,
+        "n": 1,
+        "scores": [
+          0.625
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 0.5625,
+        "n": 1,
+        "scores": [
+          0.5625
+        ]
+      }
+    },
+    "cron_next": {
+      "base-direct@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.9459459459459459,
+        "n": 2,
+        "scores": [
+          0.9459459459459459,
+          0.9459459459459459
+        ]
+      },
+      "base@opus": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.9459459459459459,
+        "n": 1,
+        "scores": [
+          0.9459459459459459
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      }
+    },
+    "csv_normalize": {
+      "base-direct@sonnet": {
+        "mean": 0.7619047619047619,
+        "n": 1,
+        "scores": [
+          0.7619047619047619
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.023809523809523808,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.047619047619047616
+        ]
+      },
+      "base@opus": {
+        "mean": 0.7619047619047619,
+        "n": 1,
+        "scores": [
+          0.7619047619047619
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.9047619047619048,
+        "n": 3,
+        "scores": [
+          1.0,
+          0.9523809523809523,
+          0.7619047619047619
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 0.023809523809523808,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.047619047619047616
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "raar@fable": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.5,
+        "n": 2,
+        "scores": [
+          0.5238095238095238,
+          0.47619047619047616
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 0.9523809523809523,
+        "n": 2,
+        "scores": [
+          1.0,
+          0.9047619047619048
+        ]
+      }
+    },
+    "digit_count": {
+      "base-direct@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "base@opus": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.3333333333333333,
+        "n": 3,
+        "scores": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.5,
+        "n": 2,
+        "scores": [
+          1.0,
+          0.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "raar@fable": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.5,
+        "n": 2,
+        "scores": [
+          0.0,
+          1.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.6666666666666666,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "interval_sched": {
+      "base-direct@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@fable": {
+        "mean": 0.9642857142857143,
+        "n": 2,
+        "scores": [
+          0.9285714285714286,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.8928571428571428,
+        "n": 2,
+        "scores": [
+          1.0,
+          0.7857142857142857
+        ]
+      },
+      "base@opus": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.75,
+        "n": 3,
+        "scores": [
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 0.9107142857142857,
+        "n": 2,
+        "scores": [
+          1.0,
+          0.8214285714285714
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.9107142857142857,
+        "n": 2,
+        "scores": [
+          0.8214285714285714,
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 0.875,
+        "n": 2,
+        "scores": [
+          1.0,
+          0.75
+        ]
+      },
+      "raar@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.9285714285714286,
+        "n": 2,
+        "scores": [
+          0.8571428571428571,
+          1.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 0.4107142857142857,
+        "n": 2,
+        "scores": [
+          0.8214285714285714,
+          0.0
+        ]
+      }
+    },
+    "perm_constraints": {
+      "base-direct@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "base@opus": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.6666666666666666,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.6666666666666666,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      }
+    },
+    "records_merge": {
+      "base-direct@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "base@opus": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.3333333333333333,
+        "n": 3,
+        "scores": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      }
+    },
+    "seq_runs": {
+      "base-direct@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.0,
+        "n": 2,
+        "scores": [
+          0.0,
+          0.0
+        ]
+      },
+      "base@opus": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.6666666666666666,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.6666666666666666,
+        "n": 3,
+        "scores": [
+          0.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      }
+    },
+    "table_render": {
+      "base-direct@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@fable": {
+        "mean": 1.0,
+        "n": 2,
+        "scores": [
+          1.0,
+          1.0
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.9666666666666667,
+        "n": 2,
+        "scores": [
+          0.9333333333333333,
+          1.0
+        ]
+      },
+      "base@opus": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "base@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@haiku": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 1.0,
+        "n": 3,
+        "scores": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 1.0,
+        "n": 1,
+        "scores": [
+          1.0
+        ]
+      }
+    },
+    "tokenizer_debug": {
+      "base-direct@sonnet": {
+        "mean": 0.0,
+        "n": 1,
+        "scores": [
+          0.0
+        ]
+      },
+      "base@fable": {
+        "mean": 0.9615384615384616,
+        "n": 2,
+        "scores": [
+          0.9615384615384616,
+          0.9615384615384616
+        ]
+      },
+      "base@haiku": {
+        "mean": 0.8461538461538463,
+        "n": 2,
+        "scores": [
+          0.9230769230769231,
+          0.7692307692307693
+        ]
+      },
+      "base@opus": {
+        "mean": 0.9615384615384616,
+        "n": 1,
+        "scores": [
+          0.9615384615384616
+        ]
+      },
+      "base@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 3,
+        "scores": [
+          0.9615384615384616,
+          0.9615384615384616,
+          0.9615384615384616
+        ]
+      },
+      "bo10@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 1,
+        "scores": [
+          0.9615384615384616
+        ]
+      },
+      "raar-approval@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 1,
+        "scores": [
+          0.9615384615384616
+        ]
+      },
+      "raar-norubric@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 1,
+        "scores": [
+          0.9615384615384616
+        ]
+      },
+      "raar@haiku": {
+        "mean": 0.7307692307692307,
+        "n": 1,
+        "scores": [
+          0.7307692307692307
+        ]
+      },
+      "raar@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 3,
+        "scores": [
+          0.9615384615384616,
+          0.9615384615384616,
+          0.9615384615384616
+        ]
+      },
+      "selfrefine@sonnet": {
+        "mean": 0.9615384615384616,
+        "n": 1,
+        "scores": [
+          0.9615384615384616
+        ]
+      }
+    }
+  }
+}

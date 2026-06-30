@@ -1,0 +1,21 @@
+id,full_name,nickname,age,score,active,joined_date,city,note
+1," Bob ","b,o",8,3.5,true,2024-01-02,"New York"," keeps spaces "
+2,"Ana","ann",7,3.5,true,2024-01-02,"Seoul","alpha"
+3,"Carla",,9,,false,2024-01-02,"Busan",
+4,"Dae","dae",10,4,true,2024-01-03,"Daegu","He said ""go"""
+5,"Eun","e\un",11,5,false,2024-01-03,"Incheon","escaped,comma"
+6,"Fio","fi""o",12,5,false,2024-01-03,"Gwangju","quoted,comma"
+7,"Gia","gi",13,6,true,2024-01-04," Jeju ","trimmed"
+8,"Han","han",14,7.25,false,2024-01-04,"Jeonju","  kept  "
+9,"Ian","ian",15,8.125,true,2024-01-05,"Ulsan",
+10,"Jun","jun",16,9,false,2024-01-05,"Changwon","plain"
+11,"Kay","ka\y",17,10,true,2024-01-05,"City, Core","mix"
+12,"Li",7,18,11.5,false,2024-01-06,"Daejeon","serial"
+13,"Mia","mia",19,12,true,2024-01-06,"Sejong","zeta"
+14,"Nia","nia",20,0,false,2024-01-07,"Pohang","zero"
+15,"Omar","om",21,13.75,true,2024-01-07,"",""
+15,"Pia","pi",22,13.75,true,2024-01-07,,"blanknote"
+16,"Qi","qi",23,14,true,2024-01-08,"Busan","tail"
+16,"Rae","rae",24,14,false,2024-01-08,"Busan","tail ""quoted"""
+17,"Sol","sol",25,15.5,false,,"Suwon","slash\path"
+18,"Tae","tae",26,16,true,,"Wonju","omega"

@@ -1,0 +1,129 @@
+You are an expert judge comparing two anonymous answers to the same task.
+Judge ONLY on these rubric dimensions:
+- every Raft claim is technically accurate
+- log matching is stated precisely and tied correctly to AppendEntries checks
+- leader completeness and the election restriction are stated precisely
+- the running example is concrete, consistent, and demonstrates both properties
+- committed vs replicated vs applied are clearly and correctly distinguished
+
+Ignore length and stylistic flourishes except where the task explicitly requires them.
+Penalize technical inaccuracies heavily.
+
+=== TASK ===
+Write an explanation for a backend engineer who knows distributed systems but has not studied Raft internals.
+
+Scope:
+- Focus on two Raft safety properties only: log matching and leader completeness.
+- You may briefly define term, log index, commit, and leader election, but do not turn this into a full Raft overview.
+
+Required content:
+1. A precise explanation of the log matching property and why `AppendEntries(prevLogIndex, prevLogTerm)` enforces it.
+2. A precise explanation of leader completeness, including the election restriction that prevents an outdated candidate from becoming leader.
+3. One concrete running example with a three-node cluster. Use explicit node names, terms, indices, and entries. The example must show a conflicting follower entry being corrected and then show a later election where the out-of-date node loses.
+4. A short section that distinguishes committed vs. merely replicated vs. applied.
+5. At least one subtle misconception to avoid, stated explicitly.
+
+Constraints:
+- Every technical claim must be correct.
+- If you mention “same log prefix,” “same term,” or “majority,” define exactly what you mean.
+- Do not use diagrams or pseudocode.
+- Keep the answer between 700 and 1000 words.
+- Output only the explanation; no preamble or conclusion.
+
+=== ANSWER A ===
+A term is a monotonically increasing integer that acts as a logical clock; each new election increments the term. A log index is the 1-based position of an entry in the replicated log. An entry is committed once the leader has stored it on a majority of nodes, meaning more than half the cluster. Leader election is the process by which a candidate solicits votes and becomes leader if it wins a majority.
+
+**Log Matching**
+
+The log matching property states: if two nodes have a log entry at the same index with the same term, then their logs are identical in every entry from index 1 up to and including that index. This covers the entire prefix, not merely the single matched entry.
+
+This property is enforced inductively by the AppendEntries consistency check. When a leader sends AppendEntries to append entries starting at some position, it includes prevLogIndex, the index immediately before the new entries, and prevLogTerm, the term of the entry at prevLogIndex in the leader's own log. The follower checks whether its log contains an entry at prevLogIndex with term equal to prevLogTerm. If it does not, the follower rejects the RPC. The leader then decrements its nextIndex for that follower and retries with an earlier prevLogIndex until it finds a matching position. Once the follower accepts, it overwrites any conflicting entries at and after the insertion point with the leader's entries.
+
+The inductive argument: the empty log trivially satisfies the property. If two logs agree through index k, and the leader successfully appends at index k+1 using prevLogIndex=k with a matching prevLogTerm, then the follower agreed through k before accepting and now agrees through k+1.
+
+**Leader Completeness**
+
+Leader completeness states: if an entry is committed in term T, every leader elected in any term greater than T has that entry in its log. This ensures committed data is never lost across leadership changes.
+
+The mechanism is an election restriction on voting. Before granting a vote, a voter compares the candidate's last log entry against its own. A candidate's log is more up-to-date than a voter's if the candidate's last log term is higher; if the last log terms are equal, the candidate's log is more up-to-date if its last log index is strictly greater. A voter grants its vote only if the candidate's log is at least as up-to-date as its own. Because a committed entry exists on a majority of nodes, and a candidate must collect votes from a majority to win, at least one node overlaps between those two majorities. That overlapping node holds the committed entry and will vote only for a candidate at least as up-to-date as itself, preventing any candidate without the committed entry from winning.
+
+**Three-Node Running Example**
+
+Nodes are A, B, C. In term 1, A is elected leader. A appends entry X at index 1 (term 1) and entry Y at index 2 (term 1), replicating both to B. C is partitioned and receives neither entry. A commits both entries because a majority (A and B) holds them.
+
+The partition heals but A crashes immediately after. In term 2, C campaigns. C's log is empty; B's log has last entry at index 2, term 1. B denies C's vote because B's log is more up-to-date than C's empty log. A is crashed and cannot vote. C cannot reach a majority and loses. B campaigns in term 2 and wins: B votes for itself, and C votes for B since B's log is at least as up-to-date as C's empty log. B is now term 2 leader.
+
+B receives a new client write and appends entry W at index 3 (term 2). B replicates W to C before crashing. C now has log [X@(1,1), Y@(2,1), W@(3,2)]. B has [X@(1,1), Y@(2,1), W@(3,2)]. W is not yet committed because B crashed before confirming a majority held it.
+
+A recovers with its old log [X@(1,1), Y@(2,1)], last index 2, last term 1. In term 3, A campaigns. A's last entry is in term 1. C's last entry is W at index 3, term 2; term 2 exceeds term 1, so C's log is more up-to-date and C denies A its vote. B has also recovered with last term 2 and also denies A. A cannot reach a majority and loses.
+
+C campaigns in term 3. C's last entry is W at index 3, term 2. A's last entry is Y at index 2, term 1; since term 2 exceeds term 1, C is more up-to-date and A votes for C. B's last entry is also W at index 3, term 2, identical to C's, so C is at least as up-to-date as B and B votes for C. C wins.
+
+C becomes term 3 leader and receives a new client write, appending entry V at index 3 (term 3). W was never committed, so C may replace it. C sends AppendEntries to B with prevLogIndex=2, prevLogTerm=1 and V at index 3 term 3. B's entry at index 2 is Y with term 1, matching prevLogTerm=1, so the consistency check passes. B already has W at index 3 with term 2, which conflicts with V at index 3 term 3 — same index, different term. B overwrites W with V, truncating everything from index 3 onward and replacing it with the leader's entry. C also sends AppendEntries to A with prevLogIndex=2, prevLogTerm=1 and V at index 3 term 3. A's entry at index 2 is Y with term 1, matching, and A has no entry at index 3, so A appends V. With B and A both now holding V at index 3, C has a majority and commits V.
+
+**Committed, Replicated, Applied**
+
+Replicated means an entry has been stored in a follower's log in response to AppendEntries but the leader has not yet confirmed a majority holds it. Committed means the leader has observed that a majority of nodes, strictly more than half, have stored the entry; this is a durability guarantee that the entry will survive in all future leaders' logs. Applied means the committed entry has been executed against the local state machine, producing observable side effects. The ordering is strict: an entry must be replicated before it can be committed, and committed before it can be safely applied.
+
+**Misconception to Avoid**
+
+A common false belief is that whichever candidate has the longest log always wins an election. This is wrong. The comparison is term-first. A candidate with a shorter log whose last entry has a higher term beats a candidate with a longer log whose last entry has a lower term. A log with two entries both in term 3 is more up-to-date than a log with ten entries whose last entry is in term 2. Only when the last terms are equal does log length serve as the tiebreaker. Overlooking the term-first rule leads to incorrect reasoning about which candidates are eligible to win after a partition heals.
+
+=== ANSWER B ===
+**Raft Safety Properties: Log Matching and Leader Completeness**
+
+**Background Definitions**
+
+A *term* is a monotonically increasing integer that acts as a logical clock; each election attempt starts a new term. A *log index* is a 1-based position in a node's append-only log of command entries. An entry is *committed* once the leader has replicated it to a majority of nodes (meaning more than half of all nodes, e.g., at least 2 of 3). An entry is *applied* when a node passes it to its state machine for execution. A *leader* is elected by majority vote and is the sole writer during its term.
+
+---
+
+**Log Matching Property**
+
+Log matching states: if two nodes have an entry with the same index and the same term, then their logs are identical in all entries up to and including that index.
+
+"Same index and same term" means the numerical log position matches exactly and the term number recorded in the entry matches exactly. "Identical in all entries up to that index" means every prior slot holds an entry with the same command and the same term — a shared prefix with no gaps or substitutions.
+
+This property is enforced by the `AppendEntries` consistency check. Every `AppendEntries` RPC carries a `prevLogIndex` and `prevLogTerm` — the index and term of the entry immediately preceding the new entries being sent. Before appending, a follower rejects the RPC if its own log does not contain an entry at `prevLogIndex` with term equal to `prevLogTerm`. If it does match, the follower appends the new entries and overwrites any conflicting tail. The leader then retries with a decremented `prevLogIndex` until it finds a matching point.
+
+Why does this inductive check guarantee the full prefix? At index 1, the leader sends `prevLogIndex=0`, which is vacuously satisfied. If a follower accepts entries up to index k, it has verified the entry at k−1 matches, and by induction the entire prefix up to k is consistent with the leader's log. A follower can never accept an entry at index k unless the entire prefix back to index 1 already matches.
+
+---
+
+**Leader Completeness Property**
+
+Leader completeness states: if an entry is committed in some term, every leader elected in any later term has that entry in its log at the time of election.
+
+The election restriction that enforces this is the *up-to-date vote rule*: a candidate is granted a vote only if its log is at least as up-to-date as the voter's log. "At least as up-to-date" is defined precisely: the candidate's last log entry has a higher term than the voter's last entry, or if the terms are equal, the candidate's log is at least as long (index is greater than or equal).
+
+Why does this prevent an outdated candidate from winning? A committed entry has been stored on a majority of nodes. Any new election also requires a majority of votes. These two majorities must overlap — they share at least one node. That overlapping node holds the committed entry and will refuse to vote for a candidate whose log does not reflect it, because the candidate's log would be "less up-to-date." Since the candidate needs a majority, and at least one member of every possible majority rejects it, the candidate cannot win.
+
+---
+
+**Concrete Three-Node Example**
+
+Cluster: nodes A, B, C. A is the initial leader in term 1.
+
+A replicates three entries at indices 1, 2, 3 (all term 1) to B and C, commits all three (majority confirmed), and all nodes apply them.
+
+A then replicates an entry at index 4 (term 1) only to B before crashing. B has index 4 but C does not. Index 4 is not yet committed.
+
+A new election starts (term 2). C runs for leader. B's last entry is index 4, term 1. C's last entry is index 3, term 1. B compares: same last term (1), but B's log is longer (index 4 vs. 3), so C is less up-to-date. B withholds its vote. C cannot win with only its own vote (1 of 3). B wins instead, becoming leader in term 2 with its log intact through index 4.
+
+Now consider a variant where B wins in term 2 and replicates index 4 to A and C, committing it. Later, another crash causes a term 3 election. C is still at index 3 (term 1). A and B are at index 4 (term 1, now committed). C cannot win: it needs 2 votes, but both A and B see C's log as less up-to-date (same last term 1, shorter log). Either A or B becomes leader, preserving index 4.
+
+If C had won before index 4 was committed, it would have appended its own entries at index 4 with term 2, conflicting with B's uncommitted entry. When B rejoined, the `AppendEntries` check at index 3 would match, and B would overwrite its index 4 with the leader's term-2 entry — the log matching correction.
+
+---
+
+**Committed vs. Replicated vs. Applied**
+
+*Replicated* means a copy of the entry exists on a node's log, but the leader has not yet heard back from a majority. *Committed* means the leader has confirmed the entry is durably stored on a majority and has advanced its commit index; the entry will survive any future leader change. *Applied* means the entry has been passed to the state machine. Applied always lags commit: a follower applies entries only after learning the commit index from the leader's next message.
+
+---
+
+**Misconception to Avoid**
+
+A common mistake: believing that once an entry is replicated to a majority it is safe to treat as committed. In Raft, a leader may only commit an entry from its *current* term by counting majority acknowledgments; it cannot directly commit entries from prior terms by majority count alone. An old entry becomes committed only indirectly, when a new entry from the current term is committed and the commit index advances past it. Treating replication-to-majority as equivalent to commitment can lead to incorrectly concluding that an entry is durable when a new leader could still overwrite it.
+
+Briefly compare the answers dimension by dimension, then end your reply with exactly one line: "WINNER: A" or "WINNER: B" or "WINNER: TIE".

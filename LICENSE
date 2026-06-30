@@ -1,0 +1,15 @@
+Model_LvUP Research Artifact License Notice
+
+Copyright (c) 2026 Jinbae Park.
+
+This repository is published for research inspection and reproducibility.
+
+Benchmark task files that declare MIT licensing in their `task.json` metadata
+or include task-level LICENSE files are available under those task-level terms.
+Code and data files without an explicit license header are provided for
+inspection and reproduction of the accompanying paper. Reuse beyond
+reproducibility should cite the paper/artifact and should not imply endorsement
+by the author.
+
+If you need a standard open-source or data license for reuse, contact the
+author before relying on broader rights.

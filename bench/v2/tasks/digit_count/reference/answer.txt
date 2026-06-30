@@ -1,0 +1,2 @@
+I computed the count with a digit DP and cross-checked it with a direct enumeration over the full range.
+FINAL ANSWER: 39,149

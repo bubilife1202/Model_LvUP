@@ -1,0 +1,14 @@
+{
+  "exact_answer": 909572,
+  "length": 9,
+  "alphabet": [1, 2, 3, 4, 5, 6],
+  "max_run_length": 2,
+  "sum_modulus": 9,
+  "target_remainder": 4,
+  "forbidden_consecutive_pattern": [1, 3, 1],
+  "reference_programs": [
+    "count_dfs.py",
+    "count_dp_automaton.py"
+  ],
+  "answer_file": "answer.txt"
+}

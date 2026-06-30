@@ -1,0 +1,19 @@
+{
+  "id": "constrained_writing_16",
+  "category": "precision_writing",
+  "verifiability": "high",
+  "scoring": "constraint_fraction",
+  "license": "MIT",
+  "reference_answer": "reference/answer.txt",
+  "prompt": "Write a single paragraph about a fictional weather station. The paragraph must satisfy ALL 16 constraints below simultaneously. Sentences are defined as maximal spans ending in `.`, `!`, or `?`. Words are whitespace-separated tokens.\n\n1. The paragraph contains exactly 6 sentences.\n2. The first alphabetic character of sentences 1 through 6, in order, spells `BREEZE`.\n3. Sentence 1 contains exactly 9 words.\n4. Sentence 2 contains exactly 10 words.\n5. Sentence 3 contains exactly 11 words.\n6. Sentence 4 contains exactly 12 words.\n7. Exactly two sentences share the same first word.\n8. The shared first word is `Every`.\n9. The case-insensitive whole word `cloud` appears exactly 3 times.\n10. The case-insensitive whole word `gauge` appears exactly 3 times.\n11. The first occurrence of `cloud` appears earlier in the paragraph than the first occurrence of `gauge`.\n12. Sentence 5 contains at least one whole-word occurrence of both `cloud` and `gauge`.\n13. Exactly one sentence ends with an exclamation mark.\n14. Sentence 6 ends with a question mark.\n15. The whole paragraph contains between 74 and 82 words inclusive.\n16. The only digit token in the whole paragraph is `7`, it appears in sentence 6, and the whole word `error` never appears.\n\nOutput ONLY the paragraph, nothing else.",
+  "difficulty_rationale": [
+    "The acrostic, duplicated first-word rule, and sentence-local word counts constrain sentence openings together.",
+    "Three keyword-count rules interact with a positional rule that fixes which keyword must appear first.",
+    "The paragraph-level word band couples all local edits across six sentences.",
+    "Punctuation choices affect both sentence parsing and the exclamation/question constraints.",
+    "The unique digit token and forbidden-word rule punish casual revisions in the last sentence.",
+    "Exactly one pair of duplicate first words is allowed, so adding a natural repeated opener breaks a global constraint.",
+    "Because the checker uses maximal sentence spans ending in punctuation, stray punctuation changes the sentence inventory.",
+    "Even fluent prose can fail mechanically on only one count, so careful writers still slip on interacting constraints."
+  ]
+}

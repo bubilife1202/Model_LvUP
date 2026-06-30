@@ -1,0 +1,2 @@
+I counted the valid integers but accidentally dropped the two-digit case `34`, so my total is one too small.
+FINAL ANSWER: 39,148

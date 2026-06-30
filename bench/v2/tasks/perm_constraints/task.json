@@ -1,0 +1,19 @@
+{
+  "id": "perm_constraints",
+  "category": "math",
+  "verifiability": "high",
+  "license": "MIT",
+  "scoring": "Score is 1.0 iff the last `FINAL ANSWER:` line contains the exact integer count after removing commas; otherwise 0.0.",
+  "near_miss_policy": "exact_zero_allowed",
+  "prompt": "Count the permutations `pi` of `1,2,...,9` that satisfy all three constraints below.\\n\\nDefinitions:\\n- Positions are indexed `1` through `9`.\\n- `pi(i)` means the value in position `i`.\\n- Because `pi` is a permutation of `1,2,...,9`, each number from `1` to `9` appears exactly once.\\n\\nConstraints:\\n1. `pi` is a derangement: `pi(i) != i` for every position `i` from `1` to `9`.\\n2. For every adjacent pair of positions `i` and `i+1` with `1 <= i <= 8`, the values differ by not exactly `1`; equivalently, `|pi(i) - pi(i+1)| != 1`.\\n3. Exactly `7` positions `i` satisfy a parity match: `pi(i)` has the same parity as `i`. That means both are odd or both are even.\\n\\nReturn only the exact number of such permutations as an integer. No proof is required.\\n\\nend your response with a line 'FINAL ANSWER: <integer>'",
+  "difficulty_rationale": [
+    "The indexing is 1-based for both positions and values, so treating positions as 0-based changes both the derangement rule and the parity-match rule.",
+    "The derangement condition applies at all 9 positions simultaneously; missing even one fixed point makes the permutation invalid.",
+    "The adjacency rule is about adjacent positions having values whose absolute difference is exactly 1, not about consecutive positions themselves or about relative ordering.",
+    "Constraint 2 forbids both ascending and descending consecutive values because of the absolute value, so pairs like `(4,5)` and `(5,4)` are equally invalid.",
+    "Constraint 3 requires exactly 7 parity matches, not at least 7 or at most 7, so nearby counts such as 6 or 8 do not qualify.",
+    "Parity is asymmetric here because positions 1..9 contain 5 odd positions and 4 even positions, which makes naive half-even/half-odd reasoning unreliable.",
+    "The three constraints interact strongly, so multiplying separate counts or applying incomplete inclusion-exclusion will generally overcount or undercount.",
+    "Symmetry shortcuts such as dividing by reversal or complement are unsafe because the fixed-point and parity conditions are tied to absolute position labels."
+  ]
+}

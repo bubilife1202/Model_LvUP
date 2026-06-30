@@ -1,0 +1,37 @@
+[
+  {
+    "status": "RESOLVED",
+    "previous_severity": "MAJOR",
+    "previous_location": "paper/main.tex:680-682",
+    "issue": "The Study 2 setup previously implied that both Opus+RAAR and Fable+RAAR objective batches appeared only as failed no-answer rows, even though results/v2/all_runs.scored.json contains one salvaged Fable+RAAR interval_sched cell with score 1.0.",
+    "resolution": "The current paper distinguishes Opus+RAAR failed rows from the single salvaged Fable+RAAR fuse-stage cell and states that the salvaged cell is anecdotal n=1 evidence only."
+  },
+  {
+    "status": "RESOLVED",
+    "previous_severity": "MAJOR",
+    "previous_location": "paper/main.tex:727-737,861-866",
+    "issue": "The Study 2 Sonnet and Haiku gap-closure claims were only reproducible under an undocumented Fable-over-base headroom filter.",
+    "resolution": "The current paper explicitly states the >0.05 Fable-over-base headroom rule before reporting Sonnet n=3 and Haiku n=9 gap-closure values."
+  },
+  {
+    "status": "RESOLVED",
+    "previous_severity": "BLOCKING",
+    "previous_location": "bench/v2/tasks/cron_next/near_miss/and_instead_of_or.txt",
+    "issue": "The cron_next near-miss sample could time out under the shipped checker, producing score 0.0 instead of the declared partial-credit band.",
+    "resolution": "The near-miss now preserves the intended day-of-month/day-of-week AND bug but searches by day instead of by minute, scoring 30/37 = 0.8108108108 inside the declared [0.75, 0.85] range."
+  },
+  {
+    "status": "RESOLVED",
+    "previous_severity": "MAJOR",
+    "previous_location": "bench/v2/SPEC.md:23-31, bench/v2/validate.py:128-134, bench/v2/validate.py:269-273",
+    "issue": "The benchmark spec promised hidden-test edge coverage and exact-answer math near-miss behavior, but validation relied on hidden-test counts and a scoring-string heuristic.",
+    "resolution": "Code tasks now ship hidden_coverage manifests that validate real hidden case references, and exact-answer math tasks use an explicit near_miss_policy instead of scoring-text inference."
+  },
+  {
+    "status": "RESOLVED",
+    "previous_severity": "MINOR",
+    "previous_location": "bench/v2/SPEC.md:69-70, bench/v2/validate.py:303-306",
+    "issue": "The v2 spec described cached --fast behavior, while validate.py accepted and ignored the flag.",
+    "resolution": "The spec and CLI help now state that --fast is accepted for compatibility and still runs full validation."
+  }
+]

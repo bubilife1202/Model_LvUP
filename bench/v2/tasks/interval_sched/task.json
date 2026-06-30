@@ -1,0 +1,28 @@
+{
+  "id": "interval_sched",
+  "category": "code",
+  "verifiability": "high",
+  "scoring": "hidden_tests",
+  "license": "MIT",
+  "prompt": "Implement a Python module that defines a function:\n\n`def weighted_interval_schedule(intervals):`\n\nPrivate helper functions are allowed, but the module must define `weighted_interval_schedule`.\n\nInput:\n- `intervals` is a list of 4-tuples `(id, start, end, weight)`.\n- `id` is a unique lowercase ASCII string.\n- `start`, `end`, and `weight` are integers.\n- `start <= end` always holds.\n- Intervals use half-open semantics: an interval covers times `t` such that `start <= t < end`.\n- Therefore two intervals are compatible iff they do not overlap under those half-open semantics. In particular, touching intervals with `end == next_start` ARE compatible.\n- Zero-length intervals with `start == end` are allowed. They occupy no time, so they are compatible with any interval ending at that time, any interval starting at that time, and with other zero-length intervals at the same time.\n\nOutput:\n- Return a 2-tuple `(best_weight, chosen_ids)`.\n- `best_weight` is the maximum achievable total weight.\n- `chosen_ids` is the chosen set of interval ids, ordered by sorting the chosen intervals by `(end, start, id)` ascending.\n- The empty schedule is allowed and has total weight `0` and `chosen_ids == []`.\n\nDeterministic tie-break hierarchy:\n1. Prefer larger total weight.\n2. If total weight ties, prefer fewer chosen intervals.\n3. If that still ties, sort each chosen schedule by `(end, start, id)` and compare the resulting list of `start` values lexicographically; prefer the lexicographically smaller start-time list.\n4. If that still ties, compare the similarly ordered list of `id` values lexicographically; prefer the lexicographically smaller id list.\n\nAdditional requirements:\n- The function must not mutate the input list.\n- The result must follow the exact ordering rule above.\n- An `O(n log n)` or `O(n^2)` dynamic-programming solution is acceptable; brute force is not.\n- You may use only the Python 3.9 standard library.\n\nExamples:\n- `weighted_interval_schedule([])` returns `(0, [])`.\n- With intervals `[(\"a\", 1, 3, 5), (\"b\", 3, 5, 7)]`, the answer is `(12, [\"a\", \"b\"])` because touching is compatible.\n- With intervals `[(\"a\", 1, 4, 10), (\"b\", 1, 2, 5), (\"c\", 2, 4, 5)]`, both `{a}` and `{b,c}` have weight 10, so choose `{a}` because it uses fewer intervals.\n\nOutput ONLY one Python code block containing the complete module, and nothing else.",
+  "hidden_coverage": [
+    {"rule": "touching intervals use half-open compatibility", "cases": ["touching_chain", "touching_vs_longer", "repeated_touching_zero_length"]},
+    {"rule": "zero-length intervals are legal and compatible", "cases": ["zero_length_with_regular", "multiple_zero_length_same_time", "zero_length_bridge_with_negative_option", "nested_and_zero_length", "repeated_touching_zero_length"]},
+    {"rule": "weight ties prefer fewer intervals", "cases": ["weight_tie_fewer_intervals", "same_end_choose_chain", "touching_vs_longer"]},
+    {"rule": "start-list lexicographic tie-break", "cases": ["weight_and_count_tie_start_list_break", "same_start_list_but_id_break", "equal_weight_choose_earlier_starts"]},
+    {"rule": "final id-list tie-break", "cases": ["final_id_tie_break", "all_overlapping_final_id", "same_start_list_but_id_break", "many_equal_ends"]},
+    {"rule": "output id order follows canonical end/start/id order", "cases": ["input_unsorted", "many_equal_ends", "stress_non_overlapping_chain"]},
+    {"rule": "empty schedule wins for non-positive totals", "cases": ["empty", "single_negative_prefers_empty", "all_zero_weight_prefers_empty", "all_overlapping_negative_and_zero", "stress_zero_weight_chain"]},
+    {"rule": "shared starts/ends and all-overlap cases stress predecessor lookup", "cases": ["same_end_choose_chain", "same_start_different_end", "all_overlapping_weight_tie_start_break", "all_overlapping_final_id"]}
+  ],
+  "difficulty_rationale": [
+    "Touching intervals are compatible because ends are exclusive; solutions using strict `<` instead of `<=` lose valid schedules.",
+    "Zero-length intervals are legal and mutually compatible at the same timestamp, which breaks many textbook traceback assumptions.",
+    "The tie-break is on the lexicographic list of chosen start times after canonical ordering, not on ids, finish times, or the unsorted input order.",
+    "Even after matching weight, interval count, and start-time list, identical-timing alternatives still need a final deterministic id-list tie-break.",
+    "Returning the chosen ids in the wrong order can fail even when the chosen set is otherwise correct.",
+    "Allowing the empty schedule matters when all weights are non-positive or when weight-zero schedules tie with non-empty ones.",
+    "Multiple intervals can share the same start or end, so predecessor lookup and traceback must be careful around equality.",
+    "All-overlapping test cases force the traceback to honor tie-breaks even when only one interval can be chosen."
+  ]
+}

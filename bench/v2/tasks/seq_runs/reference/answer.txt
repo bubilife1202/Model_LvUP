@@ -1,0 +1,4 @@
+Scratch line from an incomplete count:
+FINAL ANSWER: 123
+Checked against both independent reference programs:
+FINAL ANSWER: 909,572

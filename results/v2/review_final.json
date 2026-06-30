@@ -1,0 +1,26 @@
+[
+  {
+    "severity": "MAJOR",
+    "location": "paper/main.tex:1005-1011",
+    "issue": "The limitations section says Study 2 is missing the entire Opus+RAAR and Fable+RAAR objective batches, but the results section uses a completed Fable+RAAR frontier slice (5 tasks, 6 scored rows; macro 0.967 vs 0.972 for base@fable). That is an internal contradiction about what evidence exists.",
+    "fix": "Rewrite the limitation to say Opus+RAAR is missing and Fable+RAAR remains largely incomplete except for a narrow completed 5-task verification slice that is already used in the paper."
+  },
+  {
+    "severity": "MAJOR",
+    "location": "paper/main.tex:57-59,133-140,791-792,1079-1087",
+    "issue": "The Sonnet-tier summary mixes different task denominators as if they were one continuous macro lift: base@sonnet=0.721 is over 12 tasks, raar@sonnet=0.820 is over 11, and selfrefine@sonnet=0.873 is over 12. That makes the repeated '0.721 to 0.820--0.873' / '+0.10 to +0.15' framing apples-to-oranges. On the same 11-task primary set, base@sonnet is 0.730, so the comparable lifts are smaller for RAAR (+0.089) and larger for Self-Refine (+0.171) than the text implies.",
+    "fix": "Re-express the Sonnet-tier comparison on one common denominator (preferably the 11-task primary set) or attach n_tasks to every macro whenever cross-arm denominators differ."
+  },
+  {
+    "severity": "MAJOR",
+    "location": "paper/main.tex:57-59,782-785,1085-1087",
+    "issue": "The abstract/conclusion say Self-Refine 'matches' RAAR numerically, but the body says Self-Refine is the numerically strongest Sonnet arm, and stats.json reports selfrefine@sonnet minus raar@sonnet = +0.081 on the 11 matched tasks (p=0.444). 'Not statistically separable' is true; 'matches numerically' understates the observed direction.",
+    "fix": "Change the summary language to 'Self-Refine was numerically higher but not statistically separable at this n' so the abstract and conclusion match the reported Study 2 result."
+  },
+  {
+    "severity": "MAJOR",
+    "location": "paper/main.tex:844-847,867-880",
+    "issue": "The domain-map table labels code review as 'helps' even though the displayed evidence is mixed: Haiku delta is +0.083 and Sonnet delta is -0.028, which averages to 0.0278 and does not clear the script's 'helps' threshold of 0.03. That verdict only appears if an omitted Fable delta (+0.042) is silently included, which conflicts with the paper's framing that the table shows the Haiku and Sonnet tiers and with the prose that code-review evidence is tiny-n and mixed.",
+    "fix": "Either include the hidden Fable column / explain that the verdict aggregates it, or relabel the code-review row to neutral/mixed based on the displayed Haiku and Sonnet evidence."
+  }
+]

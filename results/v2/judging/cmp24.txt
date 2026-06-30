@@ -1,0 +1,234 @@
+You are an expert judge comparing two anonymous answers to the same task.
+Judge ONLY on these rubric dimensions:
+- migration sequencing is truly zero-downtime and respects the SLOs
+- schema compatibility between old and new application versions is concrete and safe
+- backfill, dual-write or CDC, and verification are realistic and internally consistent
+- abort criteria and rollback steps are specific, measurable, and safe
+- lock management, replication lag, and indexing concerns are handled correctly
+
+Ignore length and stylistic flourishes except where the task explicitly requires them.
+Penalize technical inaccuracies heavily.
+
+=== TASK ===
+Write a practical zero-downtime migration plan for a production PostgreSQL table.
+
+Context and constraints:
+- The source table is 2 TB and is the primary write hot path for the service.
+- Peak traffic is 18,000 writes per second and 40,000 reads per second.
+- The target schema splits one wide table into a new normalized schema, adds two generated columns, and changes the primary key strategy.
+- The service must remain online throughout the migration.
+- Non-negotiable SLOs:
+  1. write availability must stay at or above 99.95%
+  2. read availability must stay at or above 99.99%
+  3. p99 write latency may not increase by more than 25% over baseline
+  4. acknowledged writes must not be lost
+  5. final cutover downtime must be 30 seconds or less
+- Assume you cannot take an exclusive lock on the 2 TB table for more than 30 seconds total.
+- You may choose logical replication, dual-write, change data capture, or another realistic approach, but you must justify the choice.
+
+What to include:
+1. A phased migration plan from preflight to cleanup.
+2. The schema-compatibility strategy that lets old and new application versions coexist.
+3. The backfill approach, including batching, throttling, verification, and how lag stays bounded.
+4. The dual-write or change-capture strategy, with reconciliation and idempotency.
+5. The cutover checklist and rollback plan.
+6. Clear abort criteria with numeric thresholds.
+7. The top three operational risks and how you would detect them early.
+
+Requirements:
+- Be specific about locks, indexes, replication lag, validation queries, and rollback.
+- Explain how you would avoid blocking writers for the whole table.
+- Show the tradeoffs of at least two migration approaches before choosing one.
+- Keep the answer between 700 and 1100 words.
+- Output only the plan; no preamble or epilogue.
+
+=== ANSWER A ===
+## Approach Tradeoffs and Selection
+
+**Dual-write (application-level):** The application writes to both old and new schemas on every transaction. Pros: no replication infrastructure, full application control over idempotency. Cons: requires coordinated deployment across all write paths before backfill completes, risk of partial writes creating schema divergence, and application complexity doubles. At 18,000 writes/second, any asymmetric failure creates immediate reconciliation debt, and the synchronous cost of writing to two schemas risks breaching the 25% p99 latency budget.
+
+**CDC via logical replication slot (pgoutput):** A WAL-based consumer reads the replication slot and transforms changes into the new schema asynchronously. Pros: completely decoupled from the application write path, all acknowledged writes are durably captured in WAL before the consumer processes them, lag is measurable via `pg_replication_slots`, and rollback requires only a flag flip. Cons: replication slot holds WAL segments creating disk risk if the consumer falls behind, and schema transformation logic lives in the consumer process.
+
+**Choice: CDC with a compatibility view layer.** WAL-backed CDC guarantees every acknowledged write is captured before transformation, directly satisfying the no-lost-writes SLO, and keeps write latency unchanged until cutover — critical at 18,000 writes/second.
+
+---
+
+## Phase 1 — Preflight (Days 1–3)
+
+1. Capture baselines: p99 write latency (call it B ms), error rates, CPU/IO on primary.
+2. Create new normalized tables (`orders_core`, `orders_ext`) in a shadow schema without touching the live table.
+3. Add all columns as nullable; compute generated values in the CDC consumer and store them as plain columns on insert, avoiding the full-table rewrite that a stored generated column on a 2 TB table would require.
+4. Build all indexes with `CREATE INDEX CONCURRENTLY` — no exclusive lock held beyond milliseconds.
+5. Add foreign key constraints using `NOT VALID`, then validate with `ALTER TABLE ... VALIDATE CONSTRAINT`, which takes only a `ShareUpdateExclusiveLock` and does not block writers.
+6. Create the primary replication slot: `SELECT pg_create_logical_replication_slot('migration_slot', 'pgoutput')`. For rollback readiness, create a scoped publication — `CREATE PUBLICATION migration_reverse FOR TABLE orders_core, orders_ext` — and a corresponding slot (`migration_reverse_slot`) so the reverse consumer is pre-staged before cutover pressure.
+7. Deploy compatibility view `v_orders` with `INSTEAD OF INSERT/UPDATE/DELETE` triggers decomposing writes into the normalized tables. Old application versions read and write through `v_orders` transparently; new versions, gated by a feature flag, write directly to `orders_core`/`orders_ext`. Both coexist without coordination.
+
+---
+
+## Phase 2 — Backfill (Days 4–7)
+
+Backfill via keyset pagination:
+
+```sql
+INSERT INTO orders_core (...)
+SELECT transform(...) FROM source_table
+WHERE id > :last_id AND id <= :last_id + 5000
+ON CONFLICT (old_pk) DO NOTHING;
+```
+
+Batch size: 5,000 rows, followed by `pg_sleep(3)`. This yields roughly 100,000 rows/minute. A 2 TB table at ~8 KB average row width holds roughly 250 million rows, completing in approximately 42 hours (~1.75 days). Target a 3-day window to accommodate I/O variance. Tune batch size up to 25,000 rows with the same sleep if primary load permits.
+
+**Lag gate (checked before every batch):**
+
+```sql
+SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), confirmed_flush_lsn)
+FROM pg_replication_slots WHERE slot_name = 'migration_slot';
+```
+
+If byte lag exceeds 500 MB, pause backfill for 30 seconds and recheck. This bounds WAL accumulation and prevents disk exhaustion.
+
+**Verification:** After backfill, compare row counts and a windowed hash over fixed id ranges:
+
+```sql
+SELECT count(*), sum(hashtext(id::text || col1 || col2))
+FROM source_table WHERE id BETWEEN :lo AND :hi;
+```
+
+Run the equivalent query on `orders_core` for the same range. Counts and aggregate hash must match within each window; accept less than 0.001% divergence from in-flight CDC writes.
+
+---
+
+## Phase 3 — Steady-State Replication (Days 7–14)
+
+The CDC consumer applies WAL events continuously. Monitor byte lag every 60 seconds. Target: lag under 500 MB at peak. If lag exceeds 2 GB sustained for 5 minutes, pause the consumer, investigate, and do not proceed to cutover.
+
+---
+
+## Phase 4 — Cutover (Target ≤ 30 seconds)
+
+**Pre-cutover gate:** Replication byte lag under 50 MB, stable for 10 minutes. Row counts match within 0.001%.
+
+**Checklist:**
+1. Confirm byte lag < 50 MB via `pg_wal_lsn_diff`.
+2. Flip feature flag to `DRAINING`: write endpoints briefly queue (< 2 s) at the load balancer while CDC consumer drains remaining WAL to lag = 0.
+3. Drain CDC consumer until LSN match confirmed (typically < 5 seconds at near-zero lag).
+4. Drop the `INSTEAD OF` triggers on `v_orders` and redefine the view to query `orders_core`/`orders_ext` directly without the trigger layer, atomically in a single transaction.
+5. Reset sequence: `SELECT setval('orders_id_seq', (SELECT max(id) FROM orders_core))` inside the same transaction, verifying the target exceeds current max before committing.
+6. Flip feature flag to `NEW_SCHEMA_ONLY`. Steps 2–6 target under 25 seconds wall-clock.
+7. Run post-cutover row-count spot-check on a fixed id range (< 5 seconds on warm indexes).
+
+**Rollback plan (valid within 30 minutes of cutover):** Flip feature flag back to `OLD_SCHEMA_ONLY`, restoring all writes to the old table. Activate the pre-staged reverse CDC consumer reading from `migration_reverse_slot` (scoped via the pre-created publication) to replay any writes that landed on the new tables back to the old table. Because every write was acknowledged only after committing to at least one durable table and is captured in WAL, no acknowledged write is lost.
+
+---
+
+## Phase 5 — Cleanup (Day 28+)
+
+After 48-hour soak with zero incidents: drop compatibility triggers, drop `v_orders`, drop both replication slots and publications, rename source table to `source_table_archived`, drop after 30-day retention window.
+
+---
+
+## Abort Criteria
+
+| Signal | Threshold | Action |
+|---|---|---|
+| p99 write latency | > B × 1.25 for 3 consecutive minutes | Abort and rollback |
+| Write error rate | > 0.05% (violates 99.95% SLO) | Immediate abort |
+| Read error rate | > 0.01% (violates 99.99% SLO) | Immediate abort |
+| Replication byte lag | > 2 GB sustained 5 min | Pause; do not cut over |
+| WAL disk usage | > 80% available | Pause backfill immediately |
+| Post-cutover hash divergence | > 0.001% | Abort and rollback |
+
+---
+
+## Top Three Operational Risks
+
+**1. Replication slot WAL accumulation.** If the CDC consumer falls behind, PostgreSQL retains WAL indefinitely, risking disk exhaustion on the primary. Early detection: alert when `pg_wal_lsn_diff` on `migration_slot` exceeds 1 GB, giving hours of headroom before disk pressure. Auto-pause backfill at 500 MB as defined above.
+
+**2. Primary key sequence collision on cutover.** If the new sequence is reset below the maximum ID already written during the cutover window, subsequent inserts fail with unique-constraint violations. Early detection: dry-run the `setval` target against the live max ID in staging the day before cutover; verify inside the cutover transaction that the target exceeds `max(id)` before committing.
+
+**3. CDC consumer deserialization failure on mid-migration DDL.** A hotfix deployment that alters the source table schema mid-migration breaks WAL consumer parsing. Early detection: the consumer emits a `PARSE_ERROR` metric; alert threshold is greater than 0 errors in any 1-minute window. Mitigation: enforce a DDL change freeze on the source table via a deploy-gate review requirement for the full migration window.
+
+=== ANSWER B ===
+# Zero-Downtime PostgreSQL Migration Plan
+
+## Approach Selection
+
+**Option A: Logical Replication** — Uses pglogical or built-in logical replication slots. Low write amplification once streaming, but requires the new schema to be replication-compatible and adds slot lag risk on a 2 TB table. Schema transformation during replication is complex.
+
+**Option B: Dual-Write + Background Backfill (chosen)** — Application writes to both old and new schema simultaneously; a batched backfill catches historical data; a reconciliation pass validates parity before cutover. This approach keeps the hot write path simple, provides a clean rollback path (stop writing to new schema), and gives fine-grained control over lag and throttling. Tradeoff: write amplification increases ~2x temporarily and application changes are required. At 18k writes/sec this is acceptable—both tables are in the same cluster and the overhead is a second INSERT/UPDATE, not a remote call.
+
+## Phase 1: Preflight (T-14 days)
+
+1. **Schema audit**: document all foreign keys, indexes, triggers, and sequences on the source table. Identify generated columns and new PK strategy (e.g., ULIDs replacing serial).
+2. **New schema creation** (no locks on source): create new normalized tables with `IF NOT EXISTS`. Build indexes `CONCURRENTLY`. Add generated columns with `STORED` keyword to avoid runtime overhead. Create sequences for new PKs.
+3. **Compatibility layer**: add a database view `v_legacy_wide` that JOINs the new normalized tables and mirrors the old schema. Application code using the read path can query the view during transition.
+4. **Feature flags**: deploy dual-write behind a flag (`MIGRATION_DUAL_WRITE=false` initially). Gate new-schema reads behind `MIGRATION_READ_NEW=false`.
+5. **Baseline metrics**: capture p50/p99 write latency, replication lag, and connection pool utilization under peak load.
+
+## Phase 2: Dual-Write Activation (T-7 days)
+
+1. **Deploy application version 2** with dual-write logic: on every INSERT/UPDATE/DELETE to old table, apply equivalent operation to new schema within the same transaction. Both writes share one `BEGIN`/`COMMIT`, preserving acknowledged-write guarantee (SLO 4).
+2. **Enable flag** on 1% of traffic; monitor for 1 hour. Promote to 100% if p99 write latency delta < 15% (abort threshold: >25%, which equals SLO 3 boundary).
+3. **Idempotency**: new-schema writes use `INSERT ... ON CONFLICT (new_pk) DO UPDATE`. This makes retries safe and prevents duplicates if the application retries on transient errors.
+
+## Phase 3: Historical Backfill (T-7 days through T-1 day)
+
+1. **Batched cursor**: process in batches of 500–1,000 rows ordered by old PK. Use `SELECT ... WHERE id BETWEEN $min AND $max` with a per-batch sleep of 50–100 ms to stay under 5% of table I/O budget.
+2. **Exclusive lock budget**: backfill uses `SELECT ... FOR UPDATE SKIP LOCKED` on individual rows only—never on the full table. This is non-blocking.
+3. **Lag bound**: dual-write ensures all rows created after Phase 2 activation are already in the new schema. Backfill only processes rows with `created_at < dual_write_start_ts`. This bounds the working set to historical data, so lag cannot grow unboundedly.
+4. **Throttle**: if primary replication lag exceeds 30 seconds or p99 write latency rises above 20% baseline, the backfill worker pauses for 60 seconds before retrying.
+5. **Verification query** (run per batch and at completion):
+   ```sql
+   SELECT COUNT(*) FROM old_table o
+   WHERE NOT EXISTS (
+     SELECT 1 FROM new_table_primary n WHERE n.legacy_id = o.id
+   ) AND o.created_at < :dual_write_start_ts;
+   ```
+   Target: 0 missing rows before proceeding to cutover.
+
+## Phase 4: Cutover (<=30 seconds)
+
+**Preconditions checklist**:
+- [ ] Verification query returns 0
+- [ ] Replication lag < 5 seconds
+- [ ] p99 write latency delta < 15%
+- [ ] Dual-write active at 100% for >=48 hours
+- [ ] Rollback script tested in staging
+
+**Cutover sequence**:
+1. Enable `MIGRATION_READ_NEW=true` (reads shift to new schema/view). Reads remain live; SLO 2 unaffected.
+2. Pause dual-write (writes go to new schema only). ~2-second window; load balancer health checks remain green.
+3. Run final verification query. If count > 0 — immediate rollback.
+4. Rename old table to `old_table_archived`. Drop legacy write path from application.
+5. Total execution: ~15–20 seconds.
+
+## Rollback Plan
+
+- **During dual-write phase**: set `MIGRATION_DUAL_WRITE=false`; new-schema writes stop; no data loss because old table is authoritative.
+- **During backfill**: same flag; backfill state is idempotent and can resume.
+- **After cutover**: rename `old_table_archived` back to `old_table`; redeploy application version 1; all acknowledged writes are intact.
+- **Rollback SLO**: achievable in < 2 minutes at any phase.
+
+## Abort Criteria
+
+| Condition | Threshold | Action |
+|---|---|---|
+| p99 write latency increase | > 25% | Pause dual-write; page on-call |
+| Write availability | < 99.95% (rolling 5 min) | Immediate rollback |
+| Replication lag | > 60 seconds | Pause backfill |
+| Verification mismatch | > 0 rows after final check | Abort cutover; stay on old schema |
+| Connection pool saturation | > 90% | Pause backfill; scale pool |
+
+## Top Three Operational Risks
+
+**1. Write latency spike from dual-write amplification.** Detected early via continuous p99 dashboards during the 1% rollout in Phase 2. The 10% delta abort threshold (below the 25% SLO limit) gives a 15-point buffer. Mitigation: async new-schema writes with a local WAL queue if synchronous latency is unacceptable, accepting a brief inconsistency window.
+
+**2. Backfill lock contention at peak hours.** Even row-level locks can accumulate on a hot table. Detected by monitoring `pg_stat_activity` for `waiting` states and lock queue depth. Mitigation: schedule backfill batches off-peak and reduce batch size to 200 rows if contention appears.
+
+**3. Replication slot lag causing disk exhaustion.** Backfill creates WAL load; if a downstream subscriber is slow, disk fills. Detected by monitoring `pg_replication_slots` and WAL directory size. Mitigation: set `max_slot_wal_keep_size = 50GB`; alert at 40 GB consumed; drop and re-create the slot if lag exceeds threshold.
+
+## Phase 5: Cleanup (T+30 days)
+
+Drop `old_table_archived`, remove feature flags, remove dual-write code paths, drop legacy compatibility view. Verify no application references remain via query log analysis before final drop.
+
+Briefly compare the answers dimension by dimension, then end your reply with exactly one line: "WINNER: A" or "WINNER: B" or "WINNER: TIE".

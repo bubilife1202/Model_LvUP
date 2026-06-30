@@ -1,0 +1,2 @@
+This count is what you get if you enforce the run-length rule and the modulo rule but forget to exclude the consecutive pattern 1,3,1.
+FINAL ANSWER: 940,620

@@ -1,0 +1,407 @@
+{
+  "integer": {
+    "tokens": [
+      {
+        "kind": "NUMBER",
+        "value": "42",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "decimal-basic": {
+    "tokens": [
+      {
+        "kind": "NUMBER",
+        "value": "12.34",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "leading-dot-decimal": {
+    "tokens": [
+      {
+        "kind": "NUMBER",
+        "value": ".5",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "+",
+        "line": 1,
+        "col": 4
+      },
+      {
+        "kind": "NUMBER",
+        "value": "1",
+        "line": 1,
+        "col": 6
+      }
+    ]
+  },
+  "trailing-dot-decimal": {
+    "tokens": [
+      {
+        "kind": "NUMBER",
+        "value": "7.",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "lone-dot-error": {
+    "error": {
+      "type": "SyntaxError",
+      "message": "unexpected character '.' at 1:1"
+    }
+  },
+  "number-then-ident": {
+    "tokens": [
+      {
+        "kind": "NUMBER",
+        "value": "12",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "IDENT",
+        "value": "abc",
+        "line": 1,
+        "col": 3
+      }
+    ]
+  },
+  "identifier": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "_name12",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "single-ops": {
+    "tokens": [
+      {
+        "kind": "OP",
+        "value": "+",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "-",
+        "line": 1,
+        "col": 2
+      },
+      {
+        "kind": "OP",
+        "value": "*",
+        "line": 1,
+        "col": 3
+      },
+      {
+        "kind": "OP",
+        "value": "/",
+        "line": 1,
+        "col": 4
+      },
+      {
+        "kind": "OP",
+        "value": "(",
+        "line": 1,
+        "col": 5
+      },
+      {
+        "kind": "OP",
+        "value": ")",
+        "line": 1,
+        "col": 6
+      },
+      {
+        "kind": "OP",
+        "value": "=",
+        "line": 1,
+        "col": 7
+      },
+      {
+        "kind": "OP",
+        "value": "<",
+        "line": 1,
+        "col": 8
+      },
+      {
+        "kind": "OP",
+        "value": ">",
+        "line": 1,
+        "col": 9
+      },
+      {
+        "kind": "OP",
+        "value": "!",
+        "line": 1,
+        "col": 10
+      },
+      {
+        "kind": "OP",
+        "value": ",",
+        "line": 1,
+        "col": 11
+      }
+    ]
+  },
+  "double-ops": {
+    "tokens": [
+      {
+        "kind": "OP",
+        "value": "<=",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": ">=",
+        "line": 1,
+        "col": 4
+      },
+      {
+        "kind": "OP",
+        "value": "==",
+        "line": 1,
+        "col": 7
+      },
+      {
+        "kind": "OP",
+        "value": "!=",
+        "line": 1,
+        "col": 10
+      }
+    ]
+  },
+  "lookahead-order": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "a",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "<=",
+        "line": 1,
+        "col": 2
+      },
+      {
+        "kind": "OP",
+        "value": "=",
+        "line": 1,
+        "col": 4
+      },
+      {
+        "kind": "IDENT",
+        "value": "b",
+        "line": 1,
+        "col": 5
+      }
+    ]
+  },
+  "comment-middle": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "x",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "IDENT",
+        "value": "y",
+        "line": 2,
+        "col": 1
+      }
+    ]
+  },
+  "comment-eof": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "x",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "comment-only-eof": {
+    "tokens": []
+  },
+  "string-basic": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "hi",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "string-escapes": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "a\\b\n\t\r\"",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "string-hash": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "#not comment",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "string-unknown-escape": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "aqb",
+        "line": 1,
+        "col": 1
+      }
+    ]
+  },
+  "string-newline": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "a\nb",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "IDENT",
+        "value": "c",
+        "line": 2,
+        "col": 4
+      }
+    ]
+  },
+  "string-newline-double": {
+    "tokens": [
+      {
+        "kind": "STRING",
+        "value": "a\nb\nc",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "+",
+        "line": 4,
+        "col": 1
+      }
+    ]
+  },
+  "tab-column": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "name",
+        "line": 1,
+        "col": 2
+      }
+    ]
+  },
+  "tab-then-op": {
+    "tokens": [
+      {
+        "kind": "OP",
+        "value": "!=",
+        "line": 1,
+        "col": 2
+      }
+    ]
+  },
+  "tabs-and-newline": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "foo",
+        "line": 1,
+        "col": 2
+      },
+      {
+        "kind": "IDENT",
+        "value": "bar",
+        "line": 2,
+        "col": 2
+      }
+    ]
+  },
+  "mixed-program": {
+    "tokens": [
+      {
+        "kind": "IDENT",
+        "value": "sum",
+        "line": 1,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "<=",
+        "line": 1,
+        "col": 4
+      },
+      {
+        "kind": "NUMBER",
+        "value": ".5",
+        "line": 1,
+        "col": 6
+      },
+      {
+        "kind": "STRING",
+        "value": "value",
+        "line": 2,
+        "col": 1
+      },
+      {
+        "kind": "OP",
+        "value": "!=",
+        "line": 2,
+        "col": 8
+      },
+      {
+        "kind": "IDENT",
+        "value": "x",
+        "line": 2,
+        "col": 10
+      }
+    ]
+  },
+  "unexpected-char": {
+    "error": {
+      "type": "SyntaxError",
+      "message": "unexpected character '@' at 1:1"
+    }
+  },
+  "unterminated-escape": {
+    "error": {
+      "type": "SyntaxError",
+      "message": "unterminated escape at 1:5"
+    }
+  },
+  "unterminated-string": {
+    "error": {
+      "type": "SyntaxError",
+      "message": "unterminated string at 1:1"
+    }
+  }
+}

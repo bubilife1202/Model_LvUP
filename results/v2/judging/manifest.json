@@ -1,0 +1,422 @@
+[
+  {
+    "id": "cmp00",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp00.txt"
+  },
+  {
+    "id": "cmp01",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp01.txt"
+  },
+  {
+    "id": "cmp02",
+    "task": "design_pipeline",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "base@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp02.txt"
+  },
+  {
+    "id": "cmp03",
+    "task": "design_pipeline",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp03.txt"
+  },
+  {
+    "id": "cmp04",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp04.txt"
+  },
+  {
+    "id": "cmp05",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp05.txt"
+  },
+  {
+    "id": "cmp06",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp06.txt"
+  },
+  {
+    "id": "cmp07",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp07.txt"
+  },
+  {
+    "id": "cmp08",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@fable",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@fable",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp08.txt"
+  },
+  {
+    "id": "cmp09",
+    "task": "design_pipeline",
+    "pair": [
+      "raar@fable",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "raar@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp09.txt"
+  },
+  {
+    "id": "cmp10",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp10.txt"
+  },
+  {
+    "id": "cmp11",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp11.txt"
+  },
+  {
+    "id": "cmp12",
+    "task": "explain_raft",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "base@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp12.txt"
+  },
+  {
+    "id": "cmp13",
+    "task": "explain_raft",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp13.txt"
+  },
+  {
+    "id": "cmp14",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp14.txt"
+  },
+  {
+    "id": "cmp15",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp15.txt"
+  },
+  {
+    "id": "cmp16",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp16.txt"
+  },
+  {
+    "id": "cmp17",
+    "task": "explain_raft",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp17.txt"
+  },
+  {
+    "id": "cmp18",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp18.txt"
+  },
+  {
+    "id": "cmp19",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp19.txt"
+  },
+  {
+    "id": "cmp20",
+    "task": "migration_plan",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "base@sonnet",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp20.txt"
+  },
+  {
+    "id": "cmp21",
+    "task": "migration_plan",
+    "pair": [
+      "base@sonnet",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp21.txt"
+  },
+  {
+    "id": "cmp22",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp22.txt"
+  },
+  {
+    "id": "cmp23",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp23.txt"
+  },
+  {
+    "id": "cmp24",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 0,
+    "A": "raar@sonnet",
+    "B": "base@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp24.txt"
+  },
+  {
+    "id": "cmp25",
+    "task": "migration_plan",
+    "pair": [
+      "raar@sonnet",
+      "base@sonnet"
+    ],
+    "pair_index": 1,
+    "order": 1,
+    "A": "base@sonnet",
+    "B": "raar@sonnet",
+    "left_seed": 1,
+    "right_seed": 1,
+    "file": "results/v2/judging/cmp25.txt"
+  },
+  {
+    "id": "cmp26",
+    "task": "migration_plan",
+    "pair": [
+      "raar@fable",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 0,
+    "A": "raar@fable",
+    "B": "base@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp26.txt"
+  },
+  {
+    "id": "cmp27",
+    "task": "migration_plan",
+    "pair": [
+      "raar@fable",
+      "base@fable"
+    ],
+    "pair_index": 0,
+    "order": 1,
+    "A": "base@fable",
+    "B": "raar@fable",
+    "left_seed": 0,
+    "right_seed": 0,
+    "file": "results/v2/judging/cmp27.txt"
+  }
+]

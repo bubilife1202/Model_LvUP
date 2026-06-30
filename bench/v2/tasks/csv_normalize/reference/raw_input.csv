@@ -1,0 +1,23 @@
+Note,Score,Joined,Name,Active,Age,ID,Alias,City
+alpha,3.500,2024-01-02,Ana,true,7,2,ann,Seoul
+" keeps spaces ", 003.500 ,01/02/2024," Bob ",YES,08,1,"b\,o","New York"
+NULL,NULL,02-Jan-2024,Carla,No,0009,3,,Busan
+"He said ""go""",4.0,2024-01-03,Dae,1,10,4,dae,Daegu
+escaped\,comma,5,01/03/2024,Eun,false,11,5,e\\un,Incheon
+"quoted\,comma",5.00,03-Jan-2024,Fio,0,0012,6,"fi\"o",Gwangju
+  trimmed  , 6 , 2024-01-04 , Gia , TRUE , 13 , 7 , gi , " Jeju "
+"  kept  ",7.25,04-Jan-2024,Han,false,14,8,han,Jeonju
+n/a,8.125,2024-01-05,Ian,yes,15,9,ian,Ulsan
+plain,9.0,01/05/2024,Jun,no,16,10,jun,Changwon
+plain,9.0,01/05/2024,Jun,no,16,10,jun,Changwon
+mix,10,05-Jan-2024,Kay,True,17,11,ka\\y,"City, Core"
+serial,11.50,2024-01-06,Li,false,"018",12,"007","Daejeon"
+serial,11.5,01/06/2024,Li,false,"018",12,"007","Daejeon"
+zeta,12,06-Jan-2024,Mia,TRUE,19,13,mia,Sejong
+zero,0,2024-01-07,Nia,0,20,14,nia,Pohang
+"",13.75,01/07/2024,Omar,true,21,15,om,""
+blanknote,13.750,07-Jan-2024,Pia,true,22,15,pi,
+tail,14,2024-01-08,Qi,yes,23,16,qi,"Busan"
+"tail ""quoted""",14.00,01/08/2024,Rae,no,24,16,rae,"Busan"
+"slash\\path",15.500, ,Sol,false,25,17,sol,"Suwon"
+omega,16,,Tae,TRUE,26,18,tae,Wonju

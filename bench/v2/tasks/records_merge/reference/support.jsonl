@@ -1,0 +1,6 @@
+{"id":" acct-001 ","updated_at":"2024-03-01T09:30:00Z","email":"alice@new.example","tags":["north","priority"]}
+{"id":"ACCT_002","updated_at":"2024-03-01T10:00:00Z","status":"active","tags":["beta","urgent"]}
+{"id":"ACCT-002","updated_at":"2024-03-01T10:30:00Z","email":null}
+{"id":"acct-003","updated_at":"2024-03-01T10:30:00Z","tombstone":true}
+{"id":"acct-004","updated_at":"2024-03-01T10:00:00Z","name":"Drew Reed","status":"active","tags":["restored"]}
+{"id":"acct-005","updated_at":"2024-03-01T11:05:00Z","email":"evan+vip@example.com","tags":["priority"," "]}

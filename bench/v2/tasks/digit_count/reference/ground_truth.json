@@ -1,0 +1,8 @@
+{
+  "answer": 39149,
+  "upper_bound": 7654321,
+  "computed_by": {
+    "digit_dp": "count_digit_dp.py",
+    "direct_enumeration": "count_enumerate.py"
+  }
+}

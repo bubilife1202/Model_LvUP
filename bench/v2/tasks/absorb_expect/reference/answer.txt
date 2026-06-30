@@ -1,0 +1,2 @@
+Using first-step analysis or an exact linear solve gives the same reduced fraction.
+FINAL ANSWER: 9479/450

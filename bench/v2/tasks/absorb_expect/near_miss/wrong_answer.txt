@@ -1,0 +1,2 @@
+Solving the expectation equations gives the following reduced fraction.
+FINAL ANSWER: 931/45

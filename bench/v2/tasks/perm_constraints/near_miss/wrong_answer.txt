@@ -1,0 +1,2 @@
+I counted almost all valid permutations but accidentally kept two invalid edge cases.
+FINAL ANSWER: 566

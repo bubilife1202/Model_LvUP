@@ -1,0 +1,13 @@
+1. `list_jobs` builds the owner predicate with string interpolation instead of a parameterized query, so it has a SQL injection bug. A crafted `owner` value can change the `SELECT` and read jobs it should not.
+
+2. `claim_next_job` has a race / TOCTOU problem because it does `SELECT ... LIMIT 1` and then `UPDATE jobs` without a transaction. Two workers can select the same queued row and both mark it running, so one job gets double-claimed.
+
+3. `claim_next_job` also has an unhandled `None` path. If `fetchone()` returns `None` because there is no queued job, `row["id"]` crashes immediately instead of producing a clean no-work result.
+
+4. `publish_with_retry` catches everything and the retry loop runs even after a non-idempotent side effect has already happened. It does `INSERT INTO receipts` and commit before calling `save_receipt`, so a later failure can make retry attempts create duplicate receipts for one logical publish.
+
+5. `export_failed_jobs` leaks a resource because the `NamedTemporaryFile` handle is returned without being closed. That file handle can remain open and leave buffered data or descriptors hanging around.
+
+6. `get_job` poisons the cache with a negative result by storing `None` in `JOB_CACHE`. If the job is inserted later, the worker keeps serving the cached miss and never refreshes or invalidates it.
+
+7. `list_jobs` has an off-by-one pagination bug because `offset = page * PAGE_SIZE`. With `page=1`, the first page starts at row 50 instead of row 0, so the first page of jobs is skipped.

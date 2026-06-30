@@ -1,0 +1,68 @@
+Merged 267 runs from 1 file(s)
+
+Per-task means
+task                                  base@haiku              raar@haiku             base@sonnet      base-direct@sonnet             bo10@sonnet             raar@sonnet    raar-approval@sonnet    raar-norubric@sonnet       selfrefine@sonnet               base@opus              base@fable              raar@fable
+absorb_expect                        0.000 (n=2)             1.000 (n=2)             0.000 (n=3)             0.000 (n=1)             0.000 (n=2)             1.000 (n=3)             0.500 (n=2)             1.000 (n=2)             1.000 (n=2)             1.000 (n=1)             1.000 (n=2)             1.000 (n=1)
+code_review_12                       0.458 (n=2)             0.542 (n=2)             0.750 (n=3)             0.500 (n=1)             0.833 (n=2)             0.722 (n=3)             0.750 (n=2)             0.708 (n=2)             0.583 (n=2)             0.750 (n=1)             0.792 (n=2)             0.833 (n=1)
+constrained_writing_16                         -                       -             0.625 (n=1)                       -                       -                       -             0.625 (n=1)             0.625 (n=1)             0.562 (n=1)                       -                       -                       -
+cron_next                            0.946 (n=2)             0.946 (n=1)             1.000 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=2)                       -
+csv_normalize                        0.024 (n=2)             0.500 (n=2)             0.905 (n=3)             0.762 (n=1)             0.024 (n=2)             1.000 (n=3)             1.000 (n=1)             1.000 (n=2)             0.952 (n=2)             0.762 (n=1)             1.000 (n=2)             1.000 (n=1)
+digit_count                          0.000 (n=2)             0.500 (n=2)             0.333 (n=3)             0.000 (n=1)             1.000 (n=2)             0.667 (n=3)             0.500 (n=2)             0.000 (n=1)             1.000 (n=2)             0.000 (n=1)             1.000 (n=2)             1.000 (n=1)
+interval_sched                       0.893 (n=2)             0.929 (n=2)             0.750 (n=3)             1.000 (n=1)             0.911 (n=2)             1.000 (n=3)             0.911 (n=2)             0.875 (n=2)             0.411 (n=2)             1.000 (n=1)             0.964 (n=2)             1.000 (n=2)
+perm_constraints                     0.000 (n=2)             0.000 (n=1)             0.667 (n=3)             0.000 (n=1)             1.000 (n=1)             0.667 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             0.000 (n=1)                       -                       -
+records_merge                        0.000 (n=2)             0.000 (n=1)             1.000 (n=3)             1.000 (n=1)             1.000 (n=1)             0.333 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=2)                       -
+seq_runs                             0.000 (n=2)             1.000 (n=1)             0.667 (n=3)             0.000 (n=1)             1.000 (n=1)             0.667 (n=3)                       -                       -             1.000 (n=1)             0.000 (n=1)             1.000 (n=1)                       -
+table_render                         0.967 (n=2)             1.000 (n=1)             1.000 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=3)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=1)             1.000 (n=2)                       -
+tokenizer_debug                      0.846 (n=2)             0.731 (n=1)             0.962 (n=3)             0.000 (n=1)             0.962 (n=1)             0.962 (n=3)             0.962 (n=1)             0.962 (n=1)             0.962 (n=1)             0.962 (n=1)             0.962 (n=2)                       -
+
+Macro means
+arm@model                 macro        n                   95% CI
+base@haiku                0.376       11           [0.130, 0.635]
+raar@haiku                0.650       11           [0.425, 0.851]
+base@sonnet               0.721       12           [0.548, 0.869]
+base-direct@sonnet        0.478       11           [0.206, 0.751]
+bo10@sonnet               0.794       11           [0.538, 0.981]
+raar@sonnet               0.820       11           [0.691, 0.937]
+raar-approval@sonnet      0.841       11           [0.719, 0.951]
+raar-norubric@sonnet      0.834       11           [0.640, 0.973]
+selfrefine@sonnet         0.873       12           [0.745, 0.986]
+base@opus                 0.679       11           [0.410, 0.908]
+base@fable                0.972       10           [0.930, 1.000]
+raar@fable                0.967        5           [0.900, 1.000]
+
+Paired permutation tests
+contrast                                n       diff          p
+raar@haiku vs base@haiku               11      0.274     0.0421
+raar@sonnet vs base@sonnet             11      0.089     0.5210
+raar@opus vs base@opus                  0          -          -
+raar@fable vs base@fable                5      0.015     0.4981
+raar@sonnet vs base@fable              10     -0.137     0.1268
+base-direct@sonnet vs raar@sonnet      11     -0.341     0.0610
+bo10@sonnet vs raar@sonnet             11     -0.026     0.9281
+raar-approval@sonnet vs raar@sonnet     10      0.027     0.8121
+raar-norubric@sonnet vs raar@sonnet     10      0.019     1.0000
+selfrefine@sonnet vs raar@sonnet       11      0.081     0.4442
+
+Degradation counts
+arm@model                   count      total       rate
+base@haiku                      5         22      0.227
+raar@haiku                      3         16      0.188
+base@sonnet                     6         34      0.176
+base-direct@sonnet              6         11      0.545
+bo10@sonnet                     2         16      0.125
+raar@sonnet                     6         33      0.182
+raar-approval@sonnet            2         15      0.133
+raar-norubric@sonnet            2         15      0.133
+selfrefine@sonnet               4         17      0.235
+base@opus                       0         11      0.000
+base@fable                      2         19      0.105
+raar@fable                      0          6      0.000
+
+Gap closure
+model            mean        n                   95% CI
+haiku           0.304        9          [-0.111, 0.639]
+sonnet          0.733        5           [0.300, 1.067]
+opus                -        0                        -
+fable               -        0                        -
+
+wrote results/v2/stats.json

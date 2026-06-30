@@ -1,0 +1,5 @@
+{"id":"ACCT-1","updated_at":"2024-03-01T09:30:00Z","balance_cents":2500,"tags":["finance","VIP"]}
+{"id":"acct-002","updated_at":"2024-03-01T10:00:00Z","balance_cents":5000,"status":"suspended"}
+{"id":"acct-003","updated_at":"2024-03-01T09:15:00Z","balance_cents":1300,"email":null}
+{"id":"acct-004","updated_at":"2024-03-01T09:45:00Z","tombstone":true}
+{"id":"acct-005","updated_at":"2024-03-01T11:05:00Z","balance_cents":999,"tags":["Ops","renewal"]}

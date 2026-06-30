@@ -1,0 +1,4 @@
+{"id": "ACCT-1", "name": "Alice Ng", "email": "alice@new.example", "status": "trial", "balance_cents": 2500, "tags": ["finance", "north", "priority", "vip"], "updated_at": "2024-03-01T09:30:00Z"}
+{"id": "ACCT-2", "name": "Bob Li", "email": "bob@example.com", "status": "active", "balance_cents": 5000, "tags": ["beta", "ops", "urgent"], "updated_at": "2024-03-01T10:30:00Z"}
+{"id": "ACCT-4", "name": "Drew Reed", "status": "active", "tags": ["restored"], "updated_at": "2024-03-01T10:00:00Z"}
+{"id": "ACCT-5", "name": "Evan", "email": "evan+vip@example.com", "status": "hold", "balance_cents": 999, "tags": ["legacy", "ops", "priority", "renewal"], "updated_at": "2024-03-01T11:05:00Z"}

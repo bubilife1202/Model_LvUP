@@ -1,0 +1,162 @@
+You are an expert judge comparing two anonymous answers to the same task.
+Judge ONLY on these rubric dimensions:
+- capacity math is correct and explicitly tied to stated assumptions
+- exactly-once semantics are defined end-to-end without contradictions
+- backpressure and overload behavior are safe and realistic
+- replay and failover handling remain correct during a regional loss
+- tradeoffs and operational risks are concrete and implementable
+
+Ignore length and stylistic flourishes except where the task explicitly requires them.
+Penalize technical inaccuracies heavily.
+
+=== TASK ===
+Write a technical design memo for a global event-ingestion pipeline.
+
+Context and constraints:
+- The system must ingest 200,000 events per second sustained across three active-active regions.
+- Peak load can rise to 300,000 events per second for up to 10 minutes.
+- Average event size is 1 KiB; 95th percentile size is 4 KiB.
+- Events are keyed by `tenant_id`. Ordering must be preserved per tenant, but global ordering is not required.
+- Exactly-once semantics are required for accepted events: if the same event ID is delivered multiple times, the system must durably store it once and produce one downstream effect once, even if producers retry, workers crash, or one region is lost.
+- Duplicate deliveries, out-of-order retries, transient timeouts, and a full outage of one region must all be handled safely.
+- Assume network partitions between regions are possible and may last long enough to force degraded operation.
+
+What to include:
+1. A concise problem statement and your explicit assumptions.
+2. The chosen architecture and at least two rejected alternatives.
+3. A capacity plan with arithmetic for ingress, durable storage, replication, network, replay, and headroom.
+4. The exact backpressure policy at low, medium, high, and saturation load, and how that policy changes during a regional outage.
+5. The replay and deduplication strategy, including how event IDs, offsets, checkpoints, or transaction markers are managed.
+6. The failover and recovery story for a single-region loss, process crashes, and producer retries.
+7. The top three operational risks and mitigations.
+
+Requirements:
+- Be concrete, quantitative, and internally consistent.
+- Show the arithmetic, not just the conclusions.
+- Do not hand-wave exactly-once semantics; define how duplicates are prevented end-to-end.
+- Keep the answer between 900 and 1300 words.
+- Output only the memo; no preamble or epilogue.
+
+=== ANSWER A ===
+**Design Memo: Global Event-Ingestion Pipeline**
+
+**1. Problem statement and assumptions**
+
+Build an ingestion pipeline sustaining 200,000 events/s (300,000 events/s peak for ≤10 minutes) across three active-active regions, preserving per-tenant ordering, and guaranteeing exactly-once durable storage and downstream effect per accepted event — under producer retries, worker crashes, full single-region loss, and inter-region network partitions.
+
+Assumptions: mean event 1 KiB, p95 4 KiB; producers retry with stable identity for at most 6 hours; inter-region RTT ≤80 ms over 10 Gbps links; 7-day retention covers all replay needs; "accepted" means synchronously durable in two regions; tenant load is hashable but individual tenants may be hot.
+
+**2. Architecture (chosen and rejected)**
+
+Each tenant has a home region assigned by rendezvous hashing, recorded as a lease (30 s TTL) in a small Raft control plane spanning all three regions (any two form a majority). Producers write to the home region's stateless gateway, which appends to a partitioned, Kafka-style replicated log: 256 partitions per region, partitioned by hash(tenant_id), so one tenant maps to exactly one partition — per-tenant order is the partition order. Each partition has replication factor 3: two replicas in the home region and one in a designated remote region, alternating per partition so each region's remote copies split 128/128 across its two peers; a produce is acknowledged only after the remote replica appends (RPO = 0). Per-partition consumers apply events transactionally downstream.
+
+Rejected alternatives: (a) A single globally-ordered consensus log (stretch-quorum, Spanner-style) — pays cross-region consensus latency on every write for global ordering we explicitly don't need, and an inter-region partition halts all ingest rather than degrading per tenant. (b) Three fully independent regional clusters with async mirroring and periodic batch reconciliation — cannot meet exactly-once on region loss (hours of acknowledged-but-unreplicated events) and leaves an unbounded duplicate window. (c) A relational database as the queue — 200k ordered writes/s plus per-tenant ordered polling is beyond practical OLTP limits.
+
+**3. Capacity plan**
+
+- Ingress: 200,000 × 1 KiB = 195 MiB/s sustained; 300,000 × 1 KiB = 293 MiB/s peak. Per region (even split): 65 MiB/s sustained, 98 MiB/s peak. Because p95 events are 4 KiB, gateways are sized on bytes, not counts, with a 2× byte ceiling.
+- Durable storage: 200,000 × 86,400 s × 1 KiB = 17.28 × 10⁹ KiB ≈ 16.1 TiB/day raw. With 7-day retention: 112.7 TiB raw; × RF 3 = 338 TiB globally. Per region: (2 local copies of its 5.4 TiB/day share + one inbound replica share, half from each peer) × 7 days = 112.7 TiB.
+- Replication network: each region ships its full ingest as remote-replica traffic split across both peers: ≈33 MiB/s sustained, 49 MiB/s (≈0.41 Gbps) peak per directed link; links are provisioned at 5 Gbps (>12× peak), so post-outage survivor mirroring (146 MiB/s ≈ 1.2 Gbps) and failback re-sync fit concurrently.
+- Replay: consumers are provisioned at 4× sustained read (4 × 195 = 781 MiB/s aggregate), so a backlog of duration B drains in B/3 — a 1-hour stall catches up in ~20 minutes.
+- Region rebuild: restoring 112.7 TiB over 5 Gbps (0.58 GiB/s) ≈ 198,000 s ≈ 55 hours, so failback is phased per partition.
+- Headroom: each region is provisioned for 300k events/s ingest (293 MiB/s) — 2× its worst-case outage load of 150k events/s (146 MiB/s) — giving ~22% normal utilization. 256 partitions × ~10 MiB/s per-partition capacity = 2.5 GiB/s per region; worst-case outage load spread over its 256 native partitions is 150,000/256 ≈ 586 events/s ≈ 0.6 MiB/s.
+
+**4. Backpressure policy**
+
+Triggers use the worse of byte utilization (vs. the 293 MiB/s regional ceiling) and end-to-end consumer lag:
+
+- Low (<40% util, lag <30 s): normal operation; ack after remote replica; 5 ms batching linger.
+- Medium (40–65% util, or lag 30–120 s): raise linger to 50 ms and enable zstd compression; pause replay/backfill consumers; page on-call.
+- High (65–85% util, or lag 2–10 min): enforce per-tenant quotas (sustained share + 50%); over-quota producers receive 429 with jittered Retry-After of 5–30 s; defer non-critical downstream consumers.
+- Saturation (>85% util, or lag >10 min): hard admission cap at 300k events/s with 429 for the excess; accepted events keep landing in the log while downstream apply lags (the log is the buffer); cold segments spill to object storage if disks pass 80%.
+
+During a regional outage, survivors carry 100–150k events/s, so all tier boundaries drop one notch (medium at 30%, high at 50%, saturation at 70%), per-tenant quotas tighten to sustained share + 20%, and re-sync traffic is capped at 25% of link bandwidth.
+
+**5. Replay and deduplication (exactly-once, end-to-end)**
+
+Producers assign deterministic event IDs (tenant_id, producer_id, monotonic sequence); a retry carries the identical ID. The log itself is at-least-once: gateway-to-log uses an idempotent producer (broker epoch + sequence eliminates gateway-retry duplicates), but a producer retry through a different gateway can still append twice. Exactly-once is therefore enforced at apply time: each partition's consumer maintains, in RocksDB, a per-(tenant, producer) high-watermark sequence plus a 24-hour event-ID set to catch out-of-order retries (24 h = 4× the 6 h producer retry horizon). Sizing: 17.28 × 10⁹ IDs/day × 50 B ≈ 864 GB globally ÷ 768 partitions ≈ 1.1 GB per partition. The downstream effect, the dedup-state update, and the input offset are committed in a single transaction in the sink store; on restart the consumer reads back its committed offset, so progress and effect are atomic — no double-apply, no gaps. Replay is simply rewinding offsets and re-consuming; dedup state makes it idempotent. Cross-region correctness follows from single-writer ownership: a tenant has one home partition, the dedup state is a deterministic function of that log, and the log's replicas span regions — so a failed-over consumer rebuilds identical dedup state from the same log.
+
+**6. Failover and recovery**
+
+- Single-region loss: the control plane's surviving majority expires the dead region's leases (≤30 s); each survivor promotes the 128 partitions whose remote replicas it holds, so each absorbs 66.7k/2 ≈ 33.3k extra events/s → 100k sustained, 150k peak, ≈50% of the 300k provisioned. RPO = 0 because every ack required the remote replica; ordering survives because the promoted replica is the same totally-ordered log, and lease fencing ensures a tenant is never writable in two regions at once. Failback drains and flips one partition at a time, preserving order.
+- Process crash: gateways are stateless; a restarted consumer resumes from its transactional offset and reprocesses the uncommitted tail, which dedup suppresses.
+- Producer retries, out-of-order retries, timed-out-but-durable writes: all carry the same deterministic ID and are absorbed by apply-time dedup.
+- Network partition: if a partition's remote replica is unreachable for >10 s, its gateway degrades that partition to local-only acks, tagging events durability=local and alerting. The tradeoff is explicit: those events have RPO equal to mirror lag if the region subsequently dies. If producers are cut off from a tenant's home region, that tenant gets 503s — a per-tenant CP choice — rather than dual-region writes that would break ordering and dedup.
+
+**7. Top three operational risks**
+
+1. Hot tenant exceeds one partition's budget, and ordering forbids fan-out. Mitigation: per-tenant gateway quotas with 429s, top-K tenant dashboards, and opt-in sub-tenant ordering keys for the largest tenants.
+2. Dedup-state loss or corruption silently breaks exactly-once. Mitigation: state is rebuildable by deterministic log replay; hourly cross-region snapshots; weekly automated rebuild-and-compare drills.
+3. Extended local-ack degraded mode accumulates unmirrored events vulnerable to compound failure. Mitigation: alert at mirror lag >5 s, cap degraded mode at 15 minutes before re-homing tenant leases to healthy pairs, and quarterly region-loss game days.
+
+=== ANSWER B ===
+# Design Memo: Global Event-Ingestion Pipeline
+
+## 1. Problem statement and assumptions
+
+Build a three-region, active-active pipeline ingesting 200k events/s sustained (300k/s peak for ≤10 min), 1 KiB mean / 4 KiB p95, keyed by `tenant_id`, with per-tenant ordering and exactly-once durable storage plus exactly-once downstream effect per event ID, surviving duplicate deliveries, crashes, retries, partitions, and full single-region loss.
+
+Assumptions: (a) producers attach a globally unique, immutable `event_id` (ULID) and retry for at most 7 days; (b) no single tenant exceeds 5,000 ev/s (this is the per-partition ordering ceiling and becomes a contractual limit); (c) the "downstream effect" is a write to an output topic/store, not an unfenceable external side effect; (d) acceptance is meaningful only as "durably quorum-written" — we never ack-then-drop; (e) load splits roughly evenly across regions via geo-routing.
+
+## 2. Architecture (and rejections)
+
+**Chosen:** Per-region partitioned commit log (Kafka-class, RF=3 in-region, acks=quorum), fronted by stateless ingest gateways. Events partition by `hash(tenant_id)` → 512 partitions/region, preserving per-tenant order. Each tenant has a **home region** recorded as a lease (with monotonically increasing epoch) in a global consensus metadata store replicated across all three regions (quorum = 2 of 3, so it survives one region loss). Processing uses log transactions (read–process–write with offsets committed atomically). The authoritative deduplication/effect ledger is a replicated KV store with conditional insert on `event_id`. Each region asynchronously mirrors its ingested log to one peer (ring topology) for replay after region loss.
+
+**Rejected A — single global strongly-consistent log** (stretch cluster or Spanner-backed queue): every write pays cross-region quorum latency (~60–120 ms RTT), throughput collapses under partition, and a partition can stall all ingestion rather than degrading per-tenant. Cost and blast radius are both worse.
+
+**Rejected B — at-least-once pipeline, consumers dedup:** pushes correctness onto every downstream team; one forgetful consumer violates the exactly-once contract. Dedup must be a platform invariant, enforced once.
+
+**Rejected C — active-passive DR:** violates the active-active requirement, wastes ~33% of fleet capacity, and untested passive paths fail when exercised.
+
+## 3. Capacity plan
+
+**Ingress.** Sustained: 200,000 × 1 KiB = 195.3 MiB/s ≈ 1.6 Gbps globally; 66.7k ev/s ≈ 65 MiB/s per region. Peak: 300,000 × 1 KiB = 293 MiB/s ≈ 2.5 Gbps. Size load balancers/NICs to the p95-heavy bound: 300,000 × 4 KiB = 1,172 MiB/s ≈ 9.8 Gbps globally (~3.3 Gbps/region; ~10 Gbps/region during single-region survival worst case) — provision 2×25 GbE per gateway tier per region.
+
+**Durable storage.** Daily raw: 200k × 86,400 = 17.28 B events × 1 KiB = 16.1 TiB/day. In-region RF=3 → 48.3 TiB/day; ring mirror duplicates each event in one peer at RF=3 → 96.6 TiB/day fleet-wide. At 7-day log retention: 676 TiB; +30% for indexes/compaction slack ≈ 880 TiB → provision 300 TiB NVMe per region.
+
+**Dedup ledger.** 7-day window = 121 B keys × ~40 B (16 B id + epoch + offset metadata) ≈ 4.4 TiB logical; ×RF3 ≈ 13.2 TiB — small.
+
+**Replication network.** Per-region mirror egress: 65 MiB/s sustained (0.55 Gbps), 98 MiB/s at peak (0.82 Gbps). Provision 5 Gbps per inter-region link (≈6× headroom). After a 1-hour partition, backlog = 65 MiB/s × 3,600 ≈ 229 GiB; catch-up at (596 − 65) ≈ 531 MiB/s drains in ≈ 7.4 minutes.
+
+**Processing and replay.** Each region's consumer tier is sized for 200k ev/s. Losing one region mid-outage for 1 hour strands 66.7k × 3,600 = 240 M events; the two survivors replay at 50k ev/s each alongside 100k ev/s live → 240 M / 100k = 40 minutes to drain.
+
+**Headroom.** Normal utilization: 66.7k / 200k = 33% per region. Worst case (one region down, 10-min peak): 150k/s live per survivor = 75% utilization, with replay paused. Partition load at that worst case: 150k / 512 ≈ 293 ev/s/partition — far under the ~5,000 ev/s per-partition ceiling.
+
+## 4. Backpressure policy
+
+Defined against per-region provisioned capacity C = 200k ev/s, enforced at gateways via per-tenant token buckets. Invariant at every tier: HTTP 202 is returned only after quorum-durable log append; if durable append cannot complete in 250 ms, reject — never buffer-and-ack.
+
+- **Low (<40% C):** accept everything; linger/batching 5 ms; replay and mirror catch-up unthrottled.
+- **Medium (40–70% C):** batching linger rises to 25 ms; per-tenant buckets enforce 1.5× contracted rate; replay capped at 25% of capacity. No rejects.
+- **High (70–90% C):** over-quota tenants get 429 + Retry-After (jittered exponential backoff expected); tier-2 (non-critical) events diverted to an object-store spill queue for deferred ingest; replay capped at 10%.
+- **Saturation (>90% C, or append p99 > 250 ms, or ISR shrink):** global admission capped at 90% C with max-min fair share across tenants; excess rejected 429; replay and mirroring catch-up paused; tier-2 fully spilled.
+
+**During regional outage:** survivors' absolute load doubles, so triggers fire at the same C thresholds but the policy hardens one notch: tenant buckets drop to 1.0× contracted rate immediately, tier-2 spills at the *medium* tier, and replay budget is 25% maximum, 0% whenever live load exceeds 70% C. Recovery of the failed region reverses these steps only after replay backlog < 5 minutes.
+
+## 5. Replay and deduplication (exactly-once mechanics)
+
+Three layers, only the last authoritative:
+
+1. **Producer/gateway:** producers reuse the same `event_id` on retry; gateways keep a 10-minute LRU/bloom cache to cheaply drop hot duplicates. Best-effort only.
+2. **Log transactions:** consumers use transactional read–process–write: output records and input offsets commit atomically; `transactional.id` fencing means a crashed worker's zombie transaction aborts on rebalance. This gives exactly-once *within* a region across crashes.
+3. **Effect ledger (authoritative, cross-region):** before the downstream effect is emitted, the worker performs a conditional insert of `(event_id → tenant epoch, offset)` into the ledger in the same transaction as the effect record. Insert succeeds → effect emitted once; key exists → duplicate dropped. The ledger also validates the tenant's **lease epoch**: a commit carrying a stale epoch is rejected, fencing any region that lost ownership during a partition.
+
+Checkpoints are simply committed offsets; replay always restarts from the last replicated checkpoint *minus* an overlap window, because the ledger makes reprocessing idempotent. Ledger retention (7 days) matches the maximum producer retry horizon, so a retry can never outlive its dedup record.
+
+## 6. Failover and recovery
+
+**Producer retries:** identical `event_id`, any region, any time within 7 days → ledger conditional insert drops the duplicate. Timeout-then-retry to a different region is safe for the same reason.
+
+**Process crash:** consumer group rebalances; transactional fencing aborts in-flight work; the new worker resumes from the last committed offset. No loss, no duplicate effect.
+
+**Region loss:** geo-DNS drains traffic to survivors (<60 s). The control plane (quorum intact at 2/3) transfers the dead region's tenant leases with incremented epochs. Survivors replay the mirrored log from the last replicated checkpoint; overlap duplicates are absorbed by the ledger; drain time ≈ 40 minutes per Section 3.
+
+**Partition (region alive but isolated):** the minority region cannot renew leases, so it stops accepting writes for affected tenants and returns 503; producers fail over via geo-routing. The majority side takes leases with higher epochs; any in-flight commits from the isolated region are rejected by epoch check. We explicitly choose consistency over availability per tenant during partitions; mirror catch-up (≈7 min for a 1-hour partition) restores symmetry after heal.
+
+## 7. Top risks and mitigations
+
+1. **Hot tenant exceeds the per-partition ordering ceiling (~5,000 ev/s).** Mitigate: contractual cap, per-tenant skew dashboards alerting at 60%, and an opt-in sub-key sharding mode for tenants who relax ordering.
+2. **Dedup ledger on the hot path becomes a latency or availability bottleneck.** Mitigate: batched conditional inserts inside the existing transaction, regional ledger shards with epoch-fenced async merge, and fail-closed behavior (503) on ledger unavailability — never fail-open.
+3. **Replay storms after heal/failover compound live load.** Mitigate: hard replay budgets from Section 4, strict priority of live over replay, and monthly game days that exercise region kill plus peak load to validate the 40-minute drain figure.
+
+Briefly compare the answers dimension by dimension, then end your reply with exactly one line: "WINNER: A" or "WINNER: B" or "WINNER: TIE".

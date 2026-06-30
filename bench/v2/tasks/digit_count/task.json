@@ -1,0 +1,19 @@
+{
+  "id": "digit_count",
+  "category": "math",
+  "verifiability": "high",
+  "scoring": "Score is 1.0 iff the last line matching `FINAL ANSWER: <integer>` gives the exact count; commas inside the integer are ignored. Otherwise score 0.0.",
+  "near_miss_policy": "exact_zero_allowed",
+  "license": "MIT",
+  "prompt": "Count the integers n in the inclusive range [1, 7,654,321] such that all three conditions hold:\n1. the sum of the decimal digits of n is divisible by 7;\n2. the decimal representation of n contains no digit 5 anywhere;\n3. the decimal representation of n contains the consecutive substring 34 at least once.\n\nDefinitions and conventions:\n- Use the usual base-10 decimal representation with no leading zeros.\n- The range endpoints are included.\n- \"Contains the consecutive substring 34\" means there exists an index i such that the i-th digit is 3 and the next digit is 4.\n- A number may contain the substring 34 more than once; it still counts only once.\n- The output value is the exact number of integers satisfying all three conditions.\n- You may include reasoning before the final line if you want.\nend your response with a line 'FINAL ANSWER: <integer>'",
+  "difficulty_rationale": [
+    "The range is inclusive at both ends, so an exclusive upper-bound loop is incorrect even when the endpoint itself does not qualify.",
+    "Leading zeros are not part of the decimal representation, so a digit-DP must not let padded zeros create fake `34` substrings or alter the digit-sum modulus before the first nonzero digit.",
+    "The condition is about the consecutive substring `34`, not merely containing both digits 3 and 4 somewhere in the number.",
+    "The digit `5` is forbidden everywhere, so any solution that checks only the `34` positions or only a prefix/suffix can leak invalid numbers.",
+    "Numbers with multiple occurrences of `34`, such as `3434`, still count once; state transitions must detect existence without double counting.",
+    "The two-digit number `34` itself is valid, which catches solutions that accidentally start from three-digit numbers or mishandle short lengths.",
+    "The divisibility test is on the decimal digit sum modulo 7, so arithmetic shortcuts based on the numeric value modulo 7 are wrong.",
+    "Tight digit-DP branches near the bound `7,654,321` are easy to mishandle because the bound contains a forbidden digit 5 and mixed digits before and after it."
+  ]
+}
