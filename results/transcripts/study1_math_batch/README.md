@@ -9,11 +9,14 @@ the ordered user/assistant message content needed to inspect the RAAR,
 Self-Refine, best-of-3, single-pass, verifier, and judging behaviors. Opaque
 local workflow metadata is intentionally removed: local filesystem paths,
 working directories, session/request identifiers, timestamps, token accounting,
-and hook/tool-list attachments are not part of the scientific artifact.
+hook/tool-list attachments, and provider thinking/signature blocks are not part
+of the scientific artifact.
 
 - `manifest.json` indexes 130 sanitized transcript files.
 - Each `agent-*.jsonl` file begins with a metadata row, followed by ordered
   `message` rows with `role`, `content`, and, when present, `model`.
+- `content` may be a string or a structured message-part array containing public
+  text/tool-use/tool-result parts from the original conversation.
 - The files are for auditability of qualitative mechanism claims. Scored
   quantitative claims should be recomputed from `results/all_objective.scored.json`
   and the scripts in `analysis/`.

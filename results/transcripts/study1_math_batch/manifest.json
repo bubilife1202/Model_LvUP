@@ -1,7 +1,7 @@
 {
   "artifact": "Model_LvUP Study 1 sanitized public transcripts",
   "assistant_model_message_counts": {
-    "claude-fable-5": 66,
+    "claude-fable-5": 54,
     "claude-opus-4-8": 1200
   },
   "file_count": 130,
@@ -202,7 +202,7 @@
         "claude-fable-5"
       ],
       "file": "agent-ac3d8dfdd6ba0cfc5.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M1_digits-s0",
       "source_file": "agent-ac3d8dfdd6ba0cfc5.jsonl"
     },
@@ -212,7 +212,7 @@
         "claude-fable-5"
       ],
       "file": "agent-a1ab58cf0b5c74410.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M1_digits-s1",
       "source_file": "agent-a1ab58cf0b5c74410.jsonl"
     },
@@ -232,7 +232,7 @@
         "claude-fable-5"
       ],
       "file": "agent-a057384df4a29c506.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M1_digits-s2",
       "source_file": "agent-a057384df4a29c506.jsonl"
     },
@@ -582,7 +582,7 @@
         "claude-fable-5"
       ],
       "file": "agent-a4fc24d39f49b8a88.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M2_binary-s0",
       "source_file": "agent-a4fc24d39f49b8a88.jsonl"
     },
@@ -612,7 +612,7 @@
         "claude-fable-5"
       ],
       "file": "agent-af9dd7f52913b3254.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M2_binary-s1",
       "source_file": "agent-af9dd7f52913b3254.jsonl"
     },
@@ -632,7 +632,7 @@
         "claude-fable-5"
       ],
       "file": "agent-a94d815f9f562ea9e.jsonl",
-      "message_count": 12,
+      "message_count": 10,
       "run_label": "T3_M2_binary-s2",
       "source_file": "agent-a94d815f9f562ea9e.jsonl"
     },
