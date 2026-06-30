@@ -43,10 +43,10 @@ After hardening, I re-ran equivalent cheats that attempt to read:
 Commands:
 
 ```bash
-python3 bench/v2/tasks/cron_next/check.py /private/tmp/model_lvup_hardening/cron_cheat_answer.md
-python3 bench/v2/tasks/interval_sched/check.py /private/tmp/model_lvup_hardening/interval_cheat_answer.md
-python3 bench/v2/tasks/table_render/check.py /private/tmp/model_lvup_hardening/table_cheat_answer.md
-python3 bench/v2/tasks/tokenizer_debug/check.py /private/tmp/model_lvup_hardening/tokenizer_cheat_answer.md
+python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_hardening/cron_cheat_answer.md
+python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/model_lvup_hardening/interval_cheat_answer.md
+python3 bench/v2/tasks/table_render/check.py artifact_tmp/model_lvup_hardening/table_cheat_answer.md
+python3 bench/v2/tasks/tokenizer_debug/check.py artifact_tmp/model_lvup_hardening/tokenizer_cheat_answer.md
 ```
 
 Observed:
@@ -63,7 +63,7 @@ Observed:
 Rescore command:
 
 ```bash
-tmpdir=$(mktemp -d /private/tmp/model_lvup_score_cmp.XXXXXX)
+tmpdir=$(mktemp -d)
 cp results/v2/all_runs.json "$tmpdir/all_runs.json"
 python3 analysis/score_v2.py "$tmpdir/all_runs.json" >/dev/null
 ```

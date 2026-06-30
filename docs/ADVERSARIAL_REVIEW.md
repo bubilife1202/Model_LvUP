@@ -6,15 +6,15 @@ This review tries to break the paper's central conditional claim by attacking fo
 
 ### FATAL: the four code tasks are not truly hidden-test tasks
 
-The code-task checkers leak their hidden fixtures to candidate code. The candidate process can read the shipped hidden JSON and simply return the expected outputs. This is not a corner case; I re-ran four deliberately broken lookup-table submissions from `/private/tmp/model_lvup_review/` and each scored `1.0`.
+The code-task checkers leak their hidden fixtures to candidate code. The candidate process can read the shipped hidden JSON and simply return the expected outputs. This is not a corner case; I re-ran four deliberately broken lookup-table submissions from `artifact_tmp/model_lvup_review/` and each scored `1.0`.
 
 Evidence:
 
 ```bash
-python3 bench/v2/tasks/cron_next/check.py /private/tmp/model_lvup_review/cron_cheat_answer.md
-python3 bench/v2/tasks/interval_sched/check.py /private/tmp/model_lvup_review/interval_cheat_answer.md
-python3 bench/v2/tasks/table_render/check.py /private/tmp/model_lvup_review/table_cheat_answer_env.md
-python3 bench/v2/tasks/tokenizer_debug/check.py /private/tmp/model_lvup_review/tokenizer_cheat_answer.md
+python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_review/cron_cheat_answer.md
+python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/model_lvup_review/interval_cheat_answer.md
+python3 bench/v2/tasks/table_render/check.py artifact_tmp/model_lvup_review/table_cheat_answer_env.md
+python3 bench/v2/tasks/tokenizer_debug/check.py artifact_tmp/model_lvup_review/tokenizer_cheat_answer.md
 ```
 
 Observed:
@@ -41,8 +41,8 @@ The checker openly says it is approximate and non-semantic. A nonsense answer th
 Evidence:
 
 ```bash
-python3 bench/v2/tasks/code_review_12/check.py /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
-sed -n '1,200p' /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
+python3 bench/v2/tasks/code_review_12/check.py artifact_tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
+sed -n '1,200p' artifact_tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
 ```
 
 Observed:
@@ -59,8 +59,8 @@ The prompt demands a single paragraph about a fictional weather station. The che
 Evidence:
 
 ```bash
-python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_off_topic.txt
-sed -n '1,200p' /private/tmp/model_lvup_review/constrained_off_topic.txt
+python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_off_topic.txt
+sed -n '1,200p' artifact_tmp/model_lvup_review/constrained_off_topic.txt
 ```
 
 Observed:
@@ -107,10 +107,10 @@ Two bad patterns coexist:
 Evidence:
 
 ```bash
-python3 bench/v2/tasks/records_merge/check.py /tmp/records_compact.jsonl
-python3 bench/v2/tasks/records_merge/check.py /tmp/records_sorted.jsonl
-python3 bench/v2/tasks/interval_sched/check.py /tmp/interval_wrapped.md
-python3 bench/v2/tasks/cron_next/check.py /tmp/cron_wrapped.txt
+python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_compact.jsonl
+python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_sorted.jsonl
+python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/interval_wrapped.md
+python3 bench/v2/tasks/cron_next/check.py artifact_tmp/cron_wrapped.txt
 ```
 
 Observed:
@@ -129,7 +129,7 @@ So some tasks are really serialization tests, while others fail to enforce their
 Evidence:
 
 ```bash
-python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_no_alpha.txt
+python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_no_alpha.txt
 ```
 
 ## Front 2: Comparison-Arm Fairness
@@ -374,13 +374,13 @@ This passed. That result is not exculpatory; it only shows the artifact passes i
 Additional adversarial re-runs:
 
 ```bash
-python3 bench/v2/tasks/code_review_12/check.py /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
-python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_off_topic.txt
-python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_no_alpha.txt
-python3 bench/v2/tasks/records_merge/check.py /tmp/records_compact.jsonl
-python3 bench/v2/tasks/records_merge/check.py /tmp/records_sorted.jsonl
-python3 bench/v2/tasks/interval_sched/check.py /tmp/interval_wrapped.md
-python3 bench/v2/tasks/cron_next/check.py /tmp/cron_wrapped.txt
+python3 bench/v2/tasks/code_review_12/check.py artifact_tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt
+python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_off_topic.txt
+python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_no_alpha.txt
+python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_compact.jsonl
+python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_sorted.jsonl
+python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/interval_wrapped.md
+python3 bench/v2/tasks/cron_next/check.py artifact_tmp/cron_wrapped.txt
 ```
 
 ## Bottom Line

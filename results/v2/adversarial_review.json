@@ -3,16 +3,16 @@
     "claim_attacked": "The four v2 code tasks are protected by hidden tests and therefore measure solution quality rather than artifact leakage.",
     "evidence": [
       "All four code-task checkers give candidate code direct path access to shipped hidden fixtures: bench/v2/tasks/cron_next/check.py passes reference/hidden_tests.json into the runner; bench/v2/tasks/interval_sched/check.py passes reference/hidden_tests.json; bench/v2/tasks/table_render/check.py passes reference/hidden_cases.json and reference/hidden_expected.json while preserving env=dict(os.environ); bench/v2/tasks/tokenizer_debug/reference/hidden_tests.py reads hidden_cases.json and hidden_expected.json from the repo.",
-      "The shipped cheat submissions under /private/tmp/model_lvup_review do not solve the tasks. They simply read the hidden fixtures from Path.cwd() or PWD and map inputs to expected outputs. Despite being benchmark leaks rather than solutions, they score perfectly: cron_next 37/37, interval_sched 28/28, table_render 30/30, tokenizer_debug 26/26."
+      "The shipped cheat submissions under artifact_tmp/model_lvup_review do not solve the tasks. They simply read the hidden fixtures from Path.cwd() or PWD and map inputs to expected outputs. Despite being benchmark leaks rather than solutions, they score perfectly: cron_next 37/37, interval_sched 28/28, table_render 30/30, tokenizer_debug 26/26."
     ],
     "front": 1,
     "recommended_fix": "Do not ship evaluation hidden fixtures in the public artifact. Run candidate code in a sandbox with no repo visibility and no inherited path/env leak. Split public dev fixtures from private eval fixtures.",
     "reproduction": [
-      "python3 bench/v2/tasks/cron_next/check.py /private/tmp/model_lvup_review/cron_cheat_answer.md",
-      "python3 bench/v2/tasks/interval_sched/check.py /private/tmp/model_lvup_review/interval_cheat_answer.md",
-      "python3 bench/v2/tasks/table_render/check.py /private/tmp/model_lvup_review/table_cheat_answer_env.md",
-      "python3 bench/v2/tasks/tokenizer_debug/check.py /private/tmp/model_lvup_review/tokenizer_cheat_answer.md",
-      "sed -n '1,220p' /private/tmp/model_lvup_review/cron_cheat_answer.md /private/tmp/model_lvup_review/interval_cheat_answer.md /private/tmp/model_lvup_review/table_cheat_answer_env.md /private/tmp/model_lvup_review/tokenizer_cheat_answer.md"
+      "python3 bench/v2/tasks/cron_next/check.py artifact_tmp/model_lvup_review/cron_cheat_answer.md",
+      "python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/model_lvup_review/interval_cheat_answer.md",
+      "python3 bench/v2/tasks/table_render/check.py artifact_tmp/model_lvup_review/table_cheat_answer_env.md",
+      "python3 bench/v2/tasks/tokenizer_debug/check.py artifact_tmp/model_lvup_review/tokenizer_cheat_answer.md",
+      "sed -n '1,220p' artifact_tmp/model_lvup_review/cron_cheat_answer.md artifact_tmp/model_lvup_review/interval_cheat_answer.md artifact_tmp/model_lvup_review/table_cheat_answer_env.md artifact_tmp/model_lvup_review/tokenizer_cheat_answer.md"
     ],
     "severity": "FATAL"
   },
@@ -25,8 +25,8 @@
     "front": 1,
     "recommended_fix": "Require structured outputs tied to seeded defect IDs plus exact location/failure fields, add precision penalties for false alarms, or reclassify the task as semi-automatic/human-audited instead of fully objective.",
     "reproduction": [
-      "python3 bench/v2/tasks/code_review_12/check.py /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
-      "sed -n '1,200p' /private/tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
+      "python3 bench/v2/tasks/code_review_12/check.py artifact_tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
+      "sed -n '1,200p' artifact_tmp/model_lvup_review/code_review_keyword_stuffing_v2.txt",
       "sed -n '1,240p' bench/v2/tasks/code_review_12/check.py",
       "sed -n '1,240p' bench/v2/tasks/code_review_12/reference/seeds.json"
     ],
@@ -36,13 +36,13 @@
     "claim_attacked": "constrained_writing_16 is an authoritative objective task rather than a pure constraint/format game.",
     "evidence": [
       "The prompt says 'Write a single paragraph about a fictional weather station', but bench/v2/tasks/constrained_writing_16/check.py only checks 16 mechanical constraints and never verifies topic or fictionality.",
-      "The off-topic paragraph in /private/tmp/model_lvup_review/constrained_off_topic.txt is about bakers, runners, lanterns, platform 7, and theater, not a fictional weather station, yet it scores 16/16."
+      "The off-topic paragraph in artifact_tmp/model_lvup_review/constrained_off_topic.txt is about bakers, runners, lanterns, platform 7, and theater, not a fictional weather station, yet it scores 16/16."
     ],
     "front": 1,
     "recommended_fix": "Either remove the semantic/topic claim from the prompt and paper, or move this task to judged or medium-verifiability scoring with human topicality checks.",
     "reproduction": [
-      "python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_off_topic.txt",
-      "sed -n '1,200p' /private/tmp/model_lvup_review/constrained_off_topic.txt",
+      "python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_off_topic.txt",
+      "sed -n '1,200p' artifact_tmp/model_lvup_review/constrained_off_topic.txt",
       "sed -n '1,220p' bench/v2/tasks/constrained_writing_16/task.json",
       "sed -n '1,220p' bench/v2/tasks/constrained_writing_16/check.py"
     ],
@@ -71,10 +71,10 @@
     "front": 1,
     "recommended_fix": "Decide whether the benchmark is judging semantics or exact serialization. If semantics matter, canonicalize before comparison. If exact serialization matters, then code-task checkers should also reject extra text instead of silently accepting it.",
     "reproduction": [
-      "python3 bench/v2/tasks/records_merge/check.py /tmp/records_compact.jsonl",
-      "python3 bench/v2/tasks/records_merge/check.py /tmp/records_sorted.jsonl",
-      "python3 bench/v2/tasks/interval_sched/check.py /tmp/interval_wrapped.md",
-      "python3 bench/v2/tasks/cron_next/check.py /tmp/cron_wrapped.txt"
+      "python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_compact.jsonl",
+      "python3 bench/v2/tasks/records_merge/check.py artifact_tmp/records_sorted.jsonl",
+      "python3 bench/v2/tasks/interval_sched/check.py artifact_tmp/interval_wrapped.md",
+      "python3 bench/v2/tasks/cron_next/check.py artifact_tmp/cron_wrapped.txt"
     ],
     "severity": "MAJOR"
   },
@@ -86,7 +86,7 @@
     "front": 1,
     "recommended_fix": "Guard the next(...) call and mark the corresponding constraint false when a sentence contains no alphabetic character.",
     "reproduction": [
-      "python3 bench/v2/tasks/constrained_writing_16/check.py /private/tmp/model_lvup_review/constrained_no_alpha.txt"
+      "python3 bench/v2/tasks/constrained_writing_16/check.py artifact_tmp/model_lvup_review/constrained_no_alpha.txt"
     ],
     "severity": "MINOR"
   },
