@@ -1,0 +1,988 @@
+[
+ {
+  "task": "T1_intervalset",
+  "arm": "base-opus",
+  "seed": 0,
+  "answer": "```python\n\"\"\"IntervalSet: maintain a set of reals as a union of intervals with open/closed endpoints.\"\"\"\n\n\nclass IntervalSet:\n    def __init__(self):\n        self._ivs = []\n\n    @staticmethod\n    def _left_key(lo, lo_closed):\n        return (lo, 0 if lo_closed else 1)\n\n    @staticmethod\n    def _right_key(hi, hi_closed):\n        return (hi, 0 if hi_closed else -1)\n\n    @classmethod\n    def _mergeable(cls, a, b):\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        if a_hi < b_lo:\n            return False\n        if a_hi > b_lo:\n            return True\n        return a_hc or b_lc\n\n    @classmethod\n    def _union_pair(cls, a, b):\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        lo = a_lo\n        lo_closed = a_lc\n        if b_lo < lo or (b_lo == lo and b_lc and not lo_closed):\n            lo = b_lo\n            lo_closed = b_lc\n        if cls._right_key(b_hi, b_hc) > cls._right_key(a_hi, a_hc):\n            hi = b_hi\n            hi_closed = b_hc\n        else:\n            hi = a_hi\n            hi_closed = a_hc\n        return (lo, hi, lo_closed, hi_closed)\n\n    @classmethod\n    def _normalize(cls, ivs):\n        cleaned = []\n        for lo, hi, lc, hc in ivs:\n            if lo > hi:\n                continue\n            if lo == hi and not (lc and hc):\n                continue\n            cleaned.append((lo, hi, lc, hc))\n        cleaned.sort(key=lambda iv: (cls._left_key(iv[0], iv[2]),\n                                     cls._right_key(iv[1], iv[3])))\n        merged = []\n        for iv in cleaned:\n            if merged and cls._mergeable(merged[-1], iv):\n                merged[-1] = cls._union_pair(merged[-1], iv)\n            else:\n                merged.append(iv)\n        return merged\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        if lo == hi and not (lo_closed and hi_closed):\n            return\n        if lo > hi:\n            return\n        self._ivs = self._normalize(self._ivs + [(lo, hi, lo_closed, hi_closed)])\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        if lo == hi and not (lo_closed and hi_closed):\n            return\n        if lo > hi:\n            return\n        result = []\n        for iv in self._ivs:\n            result.extend(self._subtract(iv, (lo, hi, lo_closed, hi_closed)))\n        self._ivs = self._normalize(result)\n\n    @classmethod\n    def _subtract(cls, a, r):\n        a_lo, a_hi, a_lc, a_hc = a\n        r_lo, r_hi, r_lc, r_hc = r\n\n        a_left = cls._left_key(a_lo, a_lc)\n        a_right = cls._right_key(a_hi, a_hc)\n        r_left = cls._left_key(r_lo, r_lc)\n        r_right = cls._right_key(r_hi, r_hc)\n\n        if r_right < a_left:\n            return [a]\n        if r_left > a_right:\n            return [a]\n\n        pieces = []\n\n        if a_left < r_left:\n            new_hi = r_lo\n            new_hc = not r_lc\n            pieces.append((a_lo, new_hi, a_lc, new_hc))\n\n        if a_right > r_right:\n            new_lo = r_hi\n            new_lc = not r_hc\n            pieces.append((new_lo, a_hi, new_lc, a_hc))\n\n        valid = []\n        for lo, hi, lc, hc in pieces:\n            if lo > hi:\n                continue\n            if lo == hi and not (lc and hc):\n                continue\n            valid.append((lo, hi, lc, hc))\n        return valid\n\n    def contains(self, x):\n        for lo, hi, lc, hc in self._ivs:\n            if x < lo or x > hi:\n                continue\n            if x == lo and not lc:\n                continue\n            if x == hi and not hc:\n                continue\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        if not self._ivs:\n            return \"{}\"\n        parts = []\n        for lo, hi, lc, hc in self._ivs:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, 'g') + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(left + format(lo, 'g') + \", \" + format(hi, 'g') + right)\n        return \" u \".join(parts)\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "base-opus",
+  "seed": 1,
+  "answer": "```python\n\"\"\"IntervalSet: a set of real numbers represented as a union of intervals.\"\"\"\n\n\nclass IntervalSet:\n    def __init__(self):\n        self._intervals = []\n\n    @staticmethod\n    def _is_empty(lo, hi, lo_closed, hi_closed):\n        if lo > hi:\n            return True\n        if lo == hi and not (lo_closed and hi_closed):\n            return True\n        return False\n\n    @classmethod\n    def _touch_or_overlap(cls, a, b):\n        a_lo, a_hi, a_loc, a_hic = a\n        b_lo, b_hi, b_loc, b_hic = b\n        if a_hi < b_lo:\n            return False\n        if a_hi == b_lo and not (a_hic or b_loc):\n            return False\n        return True\n\n    @classmethod\n    def _union_pair(cls, a, b):\n        a_lo, a_hi, a_loc, a_hic = a\n        b_lo, b_hi, b_loc, b_hic = b\n        if a_lo < b_lo:\n            lo, lo_closed = a_lo, a_loc\n        elif b_lo < a_lo:\n            lo, lo_closed = b_lo, b_loc\n        else:\n            lo, lo_closed = a_lo, (a_loc or b_loc)\n        if a_hi > b_hi:\n            hi, hi_closed = a_hi, a_hic\n        elif b_hi > a_hi:\n            hi, hi_closed = b_hi, b_hic\n        else:\n            hi, hi_closed = a_hi, (a_hic or b_hic)\n        return (lo, hi, lo_closed, hi_closed)\n\n    def _normalize(self, intervals):\n        items = [iv for iv in intervals if not self._is_empty(*iv)]\n        items.sort(key=lambda iv: (iv[0], 0 if iv[2] else 1))\n        merged = []\n        for iv in items:\n            if not merged:\n                merged.append(iv)\n                continue\n            last = merged[-1]\n            if self._touch_or_overlap(last, iv):\n                merged[-1] = self._union_pair(last, iv)\n            else:\n                merged.append(iv)\n        return merged\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        if self._is_empty(lo, hi, lo_closed, hi_closed):\n            return\n        self._intervals = self._normalize(\n            self._intervals + [(lo, hi, lo_closed, hi_closed)]\n        )\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        if self._is_empty(lo, hi, lo_closed, hi_closed):\n            return\n        r = (lo, hi, lo_closed, hi_closed)\n        result = []\n        for iv in self._intervals:\n            result.extend(self._subtract(iv, r))\n        self._intervals = self._normalize(result)\n\n    @staticmethod\n    def _subtract(a, r):\n        a_lo, a_hi, a_loc, a_hic = a\n        r_lo, r_hi, r_loc, r_hic = r\n        if a_hi < r_lo or (a_hi == r_lo and not (a_hic and r_loc)):\n            return [a]\n        if a_lo > r_hi or (a_lo == r_hi and not (a_loc and r_hic)):\n            return [a]\n        pieces = []\n        if a_lo < r_lo or (a_lo == r_lo and a_loc and not r_loc):\n            piece = (a_lo, r_lo, a_loc, not r_loc)\n            if not IntervalSet._is_empty(*piece):\n                pieces.append(piece)\n        if a_hi > r_hi or (a_hi == r_hi and a_hic and not r_hic):\n            piece = (r_hi, a_hi, not r_hic, a_hic)\n            if not IntervalSet._is_empty(*piece):\n                pieces.append(piece)\n        return pieces\n\n    def contains(self, x):\n        for lo, hi, lo_closed, hi_closed in self._intervals:\n            if x < lo or x > hi:\n                continue\n            if x == lo and not lo_closed:\n                continue\n            if x == hi and not hi_closed:\n                continue\n            return True\n        return False\n\n    def canonical(self):\n        if not self._intervals:\n            return \"{}\"\n        parts = []\n        for lo, hi, lo_closed, hi_closed in self._intervals:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, \"g\") + \"}\")\n            else:\n                left = \"[\" if lo_closed else \"(\"\n                right = \"]\" if hi_closed else \")\"\n                parts.append(\n                    left + format(lo, \"g\") + \", \" + format(hi, \"g\") + right\n                )\n        return \" u \".join(parts)\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "base-fable",
+  "seed": 0,
+  "answer": "```python\n\"\"\"IntervalSet: a set of real numbers maintained as a union of intervals\nwith open or closed endpoints.\"\"\"\n\n_NEG_INF = float(\"-inf\")\n_POS_INF = float(\"inf\")\n\n\ndef _valid(lo, hi, lo_closed, hi_closed):\n    \"\"\"Return True iff the interval is non-empty.\"\"\"\n    if lo < hi:\n        return True\n    if lo == hi:\n        return lo_closed and hi_closed\n    return False\n\n\ndef _intersect(a, b):\n    \"\"\"Intersect two generalized intervals (lo, hi, lo_closed, hi_closed).\n    Return the resulting tuple or None if empty.\"\"\"\n    a_lo, a_hi, a_lc, a_hc = a\n    b_lo, b_hi, b_lc, b_hc = b\n\n    if a_lo > b_lo:\n        lo, lc = a_lo, a_lc\n    elif b_lo > a_lo:\n        lo, lc = b_lo, b_lc\n    else:\n        lo, lc = a_lo, (a_lc and b_lc)\n\n    if a_hi < b_hi:\n        hi, hc = a_hi, a_hc\n    elif b_hi < a_hi:\n        hi, hc = b_hi, b_hc\n    else:\n        hi, hc = a_hi, (a_hc and b_hc)\n\n    if _valid(lo, hi, lc, hc):\n        return (lo, hi, lc, hc)\n    return None\n\n\nclass IntervalSet:\n    \"\"\"A set of reals stored as sorted, disjoint, maximal intervals.\n\n    Each stored interval is a tuple (lo, hi, lo_closed, hi_closed);\n    a single point v is stored as (v, v, True, True).\n    \"\"\"\n\n    def __init__(self):\n        self._ivs = []\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        if not _valid(lo, hi, lo_closed, hi_closed):\n            return\n        ivs = self._ivs + [(lo, hi, lo_closed, hi_closed)]\n        # Sort by lo; at equal lo a closed endpoint sorts first.\n        ivs.sort(key=lambda iv: (iv[0], 0 if iv[2] else 1, iv[1]))\n        merged = []\n        for iv in ivs:\n            if not merged:\n                merged.append(iv)\n                continue\n            c_lo, c_hi, c_lc, c_hc = merged[-1]\n            n_lo, n_hi, n_lc, n_hc = iv\n            # Merge iff overlapping, or touching with at least one side closed.\n            if n_lo < c_hi or (n_lo == c_hi and (c_hc or n_lc)):\n                if n_hi > c_hi:\n                    new_hi, new_hc = n_hi, n_hc\n                elif n_hi < c_hi:\n                    new_hi, new_hc = c_hi, c_hc\n                else:\n                    new_hi, new_hc = c_hi, (c_hc or n_hc)\n                merged[-1] = (c_lo, new_hi, c_lc, new_hc)\n            else:\n                merged.append(iv)\n        self._ivs = merged\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        if not _valid(lo, hi, lo_closed, hi_closed):\n            return\n        # Complement of the removed region: two half-lines.\n        left = (_NEG_INF, lo, False, not lo_closed)\n        right = (hi, _POS_INF, not hi_closed, False)\n        result = []\n        for iv in self._ivs:\n            piece = _intersect(iv, left)\n            if piece is not None:\n                result.append(piece)\n            piece = _intersect(iv, right)\n            if piece is not None:\n                result.append(piece)\n        self._ivs = result\n\n    def contains(self, x):\n        for lo, hi, lc, hc in self._ivs:\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        if not self._ivs:\n            return \"{}\"\n        parts = []\n        for lo, hi, lc, hc in self._ivs:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, \"g\") + \"}\")\n            else:\n                parts.append(\n                    (\"[\" if lc else \"(\")\n                    + format(lo, \"g\")\n                    + \", \"\n                    + format(hi, \"g\")\n                    + (\"]\" if hc else \")\")\n                )\n        return \" u \".join(parts)\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "base-fable",
+  "seed": 1,
+  "answer": "```python\n\"\"\"IntervalSet: a set of real numbers maintained as a union of intervals\nwith open or closed endpoints, kept in canonical (disjoint, sorted,\nmaximal) form.\"\"\"\n\n\nclass IntervalSet:\n    \"\"\"A set of reals represented as a union of disjoint intervals.\n\n    Each stored interval is a tuple (lo, hi, lo_closed, hi_closed).\n    A single point {v} is stored as (v, v, True, True).\n    The internal list is always canonical: disjoint, sorted, maximal.\n    \"\"\"\n\n    def __init__(self):\n        self._ivs = []\n\n    # ------------------------------------------------------------------ #\n    # helpers\n    # ------------------------------------------------------------------ #\n\n    @staticmethod\n    def _valid(lo, hi, lo_closed, hi_closed):\n        \"\"\"True iff (lo, hi, lo_closed, hi_closed) denotes a nonempty set.\"\"\"\n        if lo < hi:\n            return True\n        if lo == hi:\n            return lo_closed and hi_closed\n        return False\n\n    @staticmethod\n    def _mergeable(a, b):\n        \"\"\"True iff the union of intervals a and b is a single interval\n        (they overlap, or they touch at a point included by at least\n        one side).\"\"\"\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        # a strictly separated below b?\n        if a_hi < b_lo or (a_hi == b_lo and not (a_hc or b_lc)):\n            return False\n        # b strictly separated below a?\n        if b_hi < a_lo or (b_hi == a_lo and not (b_hc or a_lc)):\n            return False\n        return True\n\n    @staticmethod\n    def _merge(a, b):\n        \"\"\"Union of two mergeable intervals as a single interval.\"\"\"\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        if a_lo < b_lo:\n            lo, lc = a_lo, a_lc\n        elif b_lo < a_lo:\n            lo, lc = b_lo, b_lc\n        else:\n            lo, lc = a_lo, (a_lc or b_lc)\n        if a_hi > b_hi:\n            hi, hc = a_hi, a_hc\n        elif b_hi > a_hi:\n            hi, hc = b_hi, b_hc\n        else:\n            hi, hc = a_hi, (a_hc or b_hc)\n        return (lo, hi, lc, hc)\n\n    # ------------------------------------------------------------------ #\n    # public API\n    # ------------------------------------------------------------------ #\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Union the interval (lo, hi, lo_closed, hi_closed) into the set.\"\"\"\n        if not self._valid(lo, hi, lo_closed, hi_closed):\n            return\n        ivs = self._ivs + [(lo, hi, bool(lo_closed), bool(hi_closed))]\n        # Sort by lower bound; a closed lower endpoint sorts before an\n        # open one at the same value (it includes \"more\" on the left).\n        ivs.sort(key=lambda t: (t[0], 0 if t[2] else 1))\n        out = []\n        for iv in ivs:\n            if out and self._mergeable(out[-1], iv):\n                out[-1] = self._merge(out[-1], iv)\n            else:\n                out.append(iv)\n        self._ivs = out\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Subtract the interval (lo, hi, lo_closed, hi_closed) from the set.\"\"\"\n        if not self._valid(lo, hi, lo_closed, hi_closed):\n            return\n        # The complement of the removed region R is\n        #   C1 = (-inf, lo)  with right end closed iff R's lo is open\n        #   C2 = (hi, +inf)  with left end closed iff R's hi is open\n        # The new set is the union over stored A of (A & C1) and (A & C2).\n        out = []\n        for a_lo, a_hi, a_lc, a_hc in self._ivs:\n            # left piece: A & C1  -> take min of upper bounds\n            if a_hi < lo:\n                l_hi, l_hc = a_hi, a_hc\n            elif a_hi > lo:\n                l_hi, l_hc = lo, (not lo_closed)\n            else:\n                l_hi, l_hc = a_hi, (a_hc and not lo_closed)\n            if self._valid(a_lo, l_hi, a_lc, l_hc):\n                out.append((a_lo, l_hi, a_lc, l_hc))\n            # right piece: A & C2  -> take max of lower bounds\n            if a_lo > hi:\n                r_lo, r_lc = a_lo, a_lc\n            elif a_lo < hi:\n                r_lo, r_lc = hi, (not hi_closed)\n            else:\n                r_lo, r_lc = a_lo, (a_lc and not hi_closed)\n            if self._valid(r_lo, a_hi, r_lc, a_hc):\n                out.append((r_lo, a_hi, r_lc, a_hc))\n        # Removal only shrinks intervals and widens gaps, so the result\n        # is already disjoint, sorted, and maximal.\n        self._ivs = out\n\n    def contains(self, x):\n        \"\"\"Return True iff x is in the set.\"\"\"\n        for lo, hi, lc, hc in self._ivs:\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        \"\"\"Canonical string form: disjoint sorted maximal intervals joined\n        by ' u '; points as {v}; empty set as {}.\"\"\"\n        if not self._ivs:\n            return '{}'\n        parts = []\n        for lo, hi, lc, hc in self._ivs:\n            if lo == hi:\n                parts.append('{' + format(lo, 'g') + '}')\n            else:\n                parts.append(\n                    ('[' if lc else '(')\n                    + format(lo, 'g') + ', ' + format(hi, 'g')\n                    + (']' if hc else ')')\n                )\n        return ' u '.join(parts)\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "selfrefine",
+  "seed": 0,
+  "answer": "```python\n\"\"\"IntervalSet: maintain a set of reals as a union of intervals with open/closed endpoints.\"\"\"\n\n\nclass IntervalSet:\n    \"\"\"A set of real numbers represented as a union of disjoint, maximal intervals.\n\n    Internally the set is stored as a sorted list of canonical intervals. Each\n    interval is a 4-tuple ``(lo, lo_closed, hi, hi_closed)`` where ``lo <= hi``,\n    ``lo_closed``/``hi_closed`` are booleans, and a single point ``{v}`` is stored\n    as ``(v, True, v, True)``. The stored list is always kept disjoint, sorted,\n    and maximal (no two stored intervals overlap or touch in a way that would\n    permit a merge).\n    \"\"\"\n\n    def __init__(self):\n        self._ivals = []\n\n    @staticmethod\n    def _mergeable(a, b):\n        \"\"\"Return True iff ``a`` (lower-or-equal start) can union-merge with ``b``.\n\n        ``a`` is assumed to start no later than ``b`` in canonical sort order.\n        They merge if ``a`` reaches past ``b``'s start, or if they touch at a\n        shared endpoint value where at least one side includes that value.\n        \"\"\"\n        a_lo, a_lc, a_hi, a_hc = a\n        b_lo, b_lc, b_hi, b_hc = b\n        if a_hi < b_lo:\n            return False\n        if a_hi > b_lo:\n            return True\n        # a_hi == b_lo: touch at a single value; merge iff either side closes it.\n        return a_hc or b_lc\n\n    @staticmethod\n    def _union_pair(a, b):\n        \"\"\"Union two mergeable intervals; ``a`` starts no later than ``b``.\"\"\"\n        a_lo, a_lc, a_hi, a_hc = a\n        b_lo, b_lc, b_hi, b_hc = b\n        lo, lc = a_lo, a_lc\n        if b_lo < lo or (b_lo == lo and b_lc and not lc):\n            lo, lc = b_lo, b_lc\n        if a_hi > b_hi:\n            hi, hc = a_hi, a_hc\n        elif b_hi > a_hi:\n            hi, hc = b_hi, b_hc\n        else:\n            hi, hc = a_hi, (a_hc or b_hc)\n        return (lo, lc, hi, hc)\n\n    def _normalize(self, ivals):\n        \"\"\"Sort and merge a list of intervals into canonical form.\"\"\"\n        cleaned = []\n        for lo, lc, hi, hc in ivals:\n            if lo > hi:\n                continue\n            if lo == hi and not (lc and hc):\n                continue\n            cleaned.append((lo, lc, hi, hc))\n        cleaned.sort(key=lambda iv: (iv[0], not iv[1], iv[2], not iv[3]))\n        merged = []\n        for iv in cleaned:\n            if merged and self._mergeable(merged[-1], iv):\n                merged[-1] = self._union_pair(merged[-1], iv)\n            else:\n                merged.append(iv)\n        return merged\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Union the interval [lo, hi] (with given closedness) into the set.\"\"\"\n        if lo > hi:\n            return\n        if lo == hi and not (lo_closed and hi_closed):\n            return\n        self._ivals = self._normalize(\n            self._ivals + [(lo, bool(lo_closed), hi, bool(hi_closed))]\n        )\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Remove (set difference) the interval [lo, hi] from the set.\"\"\"\n        if lo > hi:\n            return\n        if lo == hi and not (lo_closed and hi_closed):\n            return\n        r_lo, r_lc, r_hi, r_hc = lo, bool(lo_closed), hi, bool(hi_closed)\n        result = []\n        for a_lo, a_lc, a_hi, a_hc in self._ivals:\n            # No real intersection: removal entirely left or right with no shared\n            # point that both sides include.\n            if r_hi < a_lo or (r_hi == a_lo and not (r_hc and a_lc)):\n                result.append((a_lo, a_lc, a_hi, a_hc))\n                continue\n            if r_lo > a_hi or (r_lo == a_hi and not (r_lc and a_hc)):\n                result.append((a_lo, a_lc, a_hi, a_hc))\n                continue\n\n            # Left remnant: part of ``a`` strictly below the removal's lower bound.\n            if a_lo < r_lo:\n                result.append((a_lo, a_lc, r_lo, not r_lc))\n            elif a_lo == r_lo and a_lc and not r_lc:\n                # a includes a_lo but removal excludes it: the point survives.\n                result.append((a_lo, True, a_lo, True))\n\n            # Right remnant: part of ``a`` strictly above the removal's upper bound.\n            if a_hi > r_hi:\n                result.append((r_hi, not r_hc, a_hi, a_hc))\n            elif a_hi == r_hi and a_hc and not r_hc:\n                # a includes a_hi but removal excludes it: the point survives.\n                result.append((a_hi, True, a_hi, True))\n\n        self._ivals = self._normalize(result)\n\n    def contains(self, x):\n        \"\"\"Return True iff ``x`` is a member of the set.\"\"\"\n        for lo, lc, hi, hc in self._ivals:\n            if x < lo or x > hi:\n                continue\n            if x == lo and not lc:\n                continue\n            if x == hi and not hc:\n                continue\n            return True\n        return False\n\n    def canonical(self):\n        \"\"\"Return the canonical string representation of the set.\"\"\"\n        if not self._ivals:\n            return \"{}\"\n        parts = []\n        for lo, lc, hi, hc in self._ivals:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, \"g\") + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(left + format(lo, \"g\") + \", \" + format(hi, \"g\") + right)\n        return \" u \".join(parts)\n```",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "selfrefine",
+  "seed": 1,
+  "answer": "```python\n\"\"\"IntervalSet: maintain a set of real numbers as a union of intervals.\n\nThe set is stored as a sorted list of disjoint, maximal intervals.  Each\ninterval is a 4-tuple ``(lo, hi, lo_closed, hi_closed)`` with ``lo <= hi`` and\ntwo booleans recording whether each endpoint is included.  A single point\n``{v}`` is stored as ``(v, v, True, True)``.  The list is renormalized after\nevery mutation so that querying and rendering can stay simple.\n\nBoundaries are compared via small ``(value, rank)`` keys so that ordinary tuple\ncomparison reproduces the ordering of points on the real line while accounting\nfor open/closed sides:\n\n* a LEFT boundary closed at ``v`` sits exactly at ``v`` (rank 0); open at ``v``\n  sits just after ``v`` (rank +1);\n* a RIGHT boundary closed at ``v`` sits exactly at ``v`` (rank 0); open at ``v``\n  sits just before ``v`` (rank -1).\n\"\"\"\n\n\nclass IntervalSet:\n    def __init__(self):\n        # List of (lo, hi, lo_closed, hi_closed), kept sorted/disjoint/maximal.\n        self._ivals = []\n\n    # ------------------------------------------------------------------ #\n    # Boundary-key helpers.\n    # ------------------------------------------------------------------ #\n    @staticmethod\n    def _norm_value(v):\n        # Collapse -0.0 to 0.0 so formatting and equality stay clean.\n        return v + 0.0 if v == 0 else v\n\n    @staticmethod\n    def _left_key(lo, lo_closed):\n        return (lo, 0 if lo_closed else 1)\n\n    @staticmethod\n    def _right_key(hi, hi_closed):\n        return (hi, 0 if hi_closed else -1)\n\n    @classmethod\n    def _mergeable(cls, a, b):\n        \"\"\"Return True if interval ``a`` (sorted no later than ``b``) overlaps\n        or touches ``b`` so that they should fuse into one maximal interval.\"\"\"\n        a_right = cls._right_key(a[1], a[3])\n        b_left = cls._left_key(b[0], b[2])\n        if b_left[0] < a_right[0]:\n            return True\n        if b_left[0] > a_right[0]:\n            return False\n        # Same value at the junction: merge unless both sides exclude it\n        # (a's right open AND b's left open).\n        return a[3] or b[2]\n\n    def _normalize(self, ivals):\n        \"\"\"Sort, merge overlapping/touching intervals, drop empties.\"\"\"\n        cleaned = []\n        for lo, hi, lc, hc in ivals:\n            lo = self._norm_value(lo)\n            hi = self._norm_value(hi)\n            if lo < hi:\n                cleaned.append((lo, hi, lc, hc))\n            elif lo == hi and lc and hc:\n                cleaned.append((lo, hi, True, True))\n            # else: empty (degenerate non-point), skip\n        if not cleaned:\n            return []\n\n        cleaned.sort(key=lambda iv: (self._left_key(iv[0], iv[2]),\n                                     self._right_key(iv[1], iv[3])))\n\n        merged = [cleaned[0]]\n        for iv in cleaned[1:]:\n            last = merged[-1]\n            if self._mergeable(last, iv):\n                # last starts no later than iv, so keep last's left boundary;\n                # take the larger of the two right boundaries.\n                if self._right_key(last[1], last[3]) >= self._right_key(iv[1], iv[3]):\n                    new_hi, new_hc = last[1], last[3]\n                else:\n                    new_hi, new_hc = iv[1], iv[3]\n                merged[-1] = (last[0], new_hi, last[2], new_hc)\n            else:\n                merged.append(iv)\n        return merged\n\n    # ------------------------------------------------------------------ #\n    # Mutating API.\n    # ------------------------------------------------------------------ #\n    def add(self, lo, hi, lo_closed, hi_closed):\n        if lo > hi:\n            return  # defensive; spec guarantees lo <= hi\n        if lo == hi and not (lo_closed and hi_closed):\n            return  # empty interval, no-op\n        self._ivals = self._normalize(\n            self._ivals + [(lo, hi, lo_closed, hi_closed)])\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        if lo > hi:\n            return  # defensive\n        if lo == hi and not (lo_closed and hi_closed):\n            return  # empty removed set, no-op\n\n        r_left = self._left_key(lo, lo_closed)\n        r_right = self._right_key(hi, hi_closed)\n\n        result = []\n        for iv in self._ivals:\n            result.extend(\n                self._subtract(iv, lo, hi, lo_closed, hi_closed, r_left, r_right))\n        self._ivals = self._normalize(result)\n\n    def _subtract(self, iv, rlo, rhi, rlc, rhc, r_left, r_right):\n        \"\"\"Subtract removal region (rlo..rhi) from one stored interval ``iv``.\n\n        Returns a list of zero, one, or two surviving interval tuples.\n        \"\"\"\n        a_lo, a_hi, a_lc, a_hc = iv\n        a_left = self._left_key(a_lo, a_lc)\n        a_right = self._right_key(a_hi, a_hc)\n\n        # No real overlap: removal ends before iv starts, or starts after iv\n        # ends.  Touching at a value both sides exclude does not intersect.\n        if r_right < a_left or r_left > a_right:\n            return [iv]\n\n        pieces = []\n\n        # Left survivor: part of iv left of the removal's left boundary.\n        # Exists iff iv starts strictly before the removal does.\n        if a_left < r_left:\n            # Complement of removal's left boundary at rlo:\n            #   removal closed at rlo -> survivor open at rlo\n            #   removal open at rlo   -> survivor closed at rlo\n            pieces.append((a_lo, rlo, a_lc, not rlc))\n\n        # Right survivor: part of iv right of the removal's right boundary.\n        # Exists iff iv ends strictly after the removal does.\n        if a_right > r_right:\n            # Complement of removal's right boundary at rhi:\n            #   removal closed at rhi -> survivor open at rhi\n            #   removal open at rhi   -> survivor closed at rhi\n            pieces.append((rhi, a_hi, not rhc, a_hc))\n\n        return pieces\n\n    # ------------------------------------------------------------------ #\n    # Queries.\n    # ------------------------------------------------------------------ #\n    def contains(self, x):\n        for lo, hi, lc, hc in self._ivals:\n            if x < lo or x > hi:\n                continue\n            if x == lo:\n                if lc:\n                    return True\n                continue\n            if x == hi:\n                if hc:\n                    return True\n                continue\n            return True  # lo < x < hi\n        return False\n\n    def canonical(self):\n        if not self._ivals:\n            return \"{}\"\n        parts = []\n        for lo, hi, lc, hc in self._ivals:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, 'g') + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(left + format(lo, 'g') + \", \" + format(hi, 'g') + right)\n        return \" u \".join(parts)\n```",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "bo3",
+  "seed": 0,
+  "answer": "```python\n\"\"\"A module providing :class:`IntervalSet`.\n\nAn :class:`IntervalSet` represents a subset of the real line as a finite\nunion of intervals, where each interval endpoint may be open or closed.\n\nInternally the set is stored as a sorted list of disjoint, maximal,\nnon-empty intervals.  Each interval is a 4-tuple::\n\n    (lo, hi, lo_closed, hi_closed)\n\nwith ``lo <= hi`` (``lo == hi`` only for a single closed point, i.e. both\nflags True).  The invariant that the stored list is sorted, disjoint and\nmaximal (no two stored intervals can be merged) is preserved after every\nmutating operation, so :meth:`canonical` only needs to render the list.\n\"\"\"\n\n\nclass IntervalSet:\n    \"\"\"A set of reals stored as a union of intervals with open/closed ends.\"\"\"\n\n    def __init__(self):\n        # List of (lo, hi, lo_closed, hi_closed), kept sorted, disjoint, maximal.\n        self._intervals = []\n\n    # ------------------------------------------------------------------ #\n    # Helpers\n    # ------------------------------------------------------------------ #\n    @staticmethod\n    def _is_empty_interval(lo, hi, lo_closed, hi_closed):\n        \"\"\"Return True if the described interval contains no points.\"\"\"\n        if lo > hi:\n            return True\n        if lo == hi:\n            # Single point only if both endpoints are closed.\n            return not (lo_closed and hi_closed)\n        return False\n\n    @staticmethod\n    def _mergeable(a, b):\n        \"\"\"Return True if interval ``a`` (which starts <= ``b``) overlaps or\n        touches ``b`` in a way that allows them to merge into one interval.\n\n        Both ``a`` and ``b`` are non-empty, and ``a`` is sorted at or before\n        ``b`` (a.lo, a.lo_closed) <= (b.lo, b.lo_closed).\n        \"\"\"\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        if a_hi > b_lo:\n            # Genuine overlap of the open interiors.\n            return True\n        if a_hi < b_lo:\n            return False\n        # a_hi == b_lo: they touch at a single point. They merge iff at least\n        # one side includes that shared endpoint value.\n        return a_hc or b_lc\n\n    @staticmethod\n    def _union_pair(a, b):\n        \"\"\"Merge two mergeable intervals into one, choosing the widest bounds.\"\"\"\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n\n        # Lower bound: smaller value wins; if equal, closed wins.\n        if a_lo < b_lo:\n            lo, lc = a_lo, a_lc\n        elif b_lo < a_lo:\n            lo, lc = b_lo, b_lc\n        else:\n            lo, lc = a_lo, (a_lc or b_lc)\n\n        # Upper bound: larger value wins; if equal, closed wins.\n        if a_hi > b_hi:\n            hi, hc = a_hi, a_hc\n        elif b_hi > a_hi:\n            hi, hc = b_hi, b_hc\n        else:\n            hi, hc = a_hi, (a_hc or b_hc)\n\n        return (lo, hi, lc, hc)\n\n    def _normalize(self, intervals):\n        \"\"\"Sort, drop empties, and merge mergeable intervals into a canonical list.\"\"\"\n        clean = [\n            iv for iv in intervals\n            if not self._is_empty_interval(*iv)\n        ]\n        # Sort by lower endpoint value, then by closedness (closed first so a\n        # touching closed-low comes before an open-low at the same value).\n        clean.sort(key=lambda iv: (iv[0], not iv[2]))\n\n        result = []\n        for iv in clean:\n            if result and self._mergeable(result[-1], iv):\n                result[-1] = self._union_pair(result[-1], iv)\n            else:\n                result.append(iv)\n        return result\n\n    # ------------------------------------------------------------------ #\n    # Public API\n    # ------------------------------------------------------------------ #\n    def add(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Union the given interval into the set.\"\"\"\n        if self._is_empty_interval(lo, hi, lo_closed, hi_closed):\n            return\n        self._intervals = self._normalize(\n            self._intervals + [(lo, hi, bool(lo_closed), bool(hi_closed))]\n        )\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        \"\"\"Remove (set-difference) the given interval from the set.\"\"\"\n        if self._is_empty_interval(lo, hi, lo_closed, hi_closed):\n            return\n\n        r_lo, r_hi, r_lc, r_hc = lo, hi, bool(lo_closed), bool(hi_closed)\n        new_intervals = []\n        for iv in self._intervals:\n            new_intervals.extend(self._subtract(iv, (r_lo, r_hi, r_lc, r_hc)))\n        self._intervals = self._normalize(new_intervals)\n\n    @staticmethod\n    def _subtract(iv, rem):\n        \"\"\"Return a list of intervals representing ``iv`` minus ``rem``.\n\n        ``iv`` is a non-empty stored interval; ``rem`` is a non-empty interval\n        to remove.  The result is a list (0, 1 or 2 intervals).\n        \"\"\"\n        a_lo, a_hi, a_lc, a_hc = iv\n        r_lo, r_hi, r_lc, r_hc = rem\n\n        # Determine whether the removal region actually intersects iv at all.\n        # If they are completely disjoint, iv is unchanged.\n        # Disjoint cases: rem entirely left of iv, or entirely right of iv.\n        # rem left of iv: r_hi < a_lo, or (r_hi == a_lo and not (r_hc and a_lc))\n        if r_hi < a_lo or (r_hi == a_lo and not (r_hc and a_lc)):\n            return [iv]\n        # rem right of iv: r_lo > a_hi, or (r_lo == a_hi and not (r_lc and a_hc))\n        if r_lo > a_hi or (r_lo == a_hi and not (r_lc and a_hc)):\n            return [iv]\n\n        pieces = []\n\n        # Left remainder: the part of iv strictly below where rem begins.\n        # It exists if iv starts before rem's lower bound, considering closedness.\n        if a_lo < r_lo:\n            # Left piece runs from a_lo to r_lo. Its upper end is r_lo, closed\n            # iff rem does NOT include r_lo (so the point r_lo stays) ... but the\n            # point r_lo belongs to the left piece only if r_lo is NOT removed,\n            # i.e. r_lc is False.\n            left = (a_lo, r_lo, a_lc, not r_lc)\n            if not IntervalSet._is_empty_interval(*left):\n                pieces.append(left)\n        elif a_lo == r_lo:\n            # iv and rem share the lower endpoint value. The point a_lo survives\n            # only if iv includes it but rem does not.\n            if a_lc and not r_lc:\n                point = (a_lo, a_lo, True, True)\n                pieces.append(point)\n\n        # Right remainder: the part of iv strictly above where rem ends.\n        if a_hi > r_hi:\n            right = (r_hi, a_hi, not r_hc, a_hc)\n            if not IntervalSet._is_empty_interval(*right):\n                pieces.append(right)\n        elif a_hi == r_hi:\n            if a_hc and not r_hc:\n                point = (a_hi, a_hi, True, True)\n                pieces.append(point)\n\n        return pieces\n\n    def contains(self, x):\n        \"\"\"Return True iff ``x`` is a member of the set.\"\"\"\n        for lo, hi, lc, hc in self._intervals:\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        \"\"\"Return the canonical string representation of the set.\"\"\"\n        intervals = self._normalize(self._intervals)\n        if not intervals:\n            return \"{}\"\n\n        parts = []\n        for lo, hi, lc, hc in intervals:\n            if lo == hi:\n                # Single point (necessarily closed on both sides).\n                parts.append(\"{\" + format(lo, \"g\") + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(\n                    left + format(lo, \"g\") + \", \" + format(hi, \"g\") + right\n                )\n        return \" u \".join(parts)\n```",
+  "calls": 4,
+  "picked": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "bo3",
+  "seed": 1,
+  "answer": "```python\n\"\"\"IntervalSet: maintain a set of reals as a union of intervals.\"\"\"\n\n\nclass IntervalSet:\n    def __init__(self):\n        self._ivals = []\n\n    @staticmethod\n    def _valid(lo, hi, lo_closed, hi_closed):\n        if lo < hi:\n            return True\n        if lo == hi:\n            return lo_closed and hi_closed\n        return False\n\n    @staticmethod\n    def _mergeable(a, b):\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        if a_hi < b_lo:\n            return False\n        if a_hi > b_lo:\n            return True\n        return a_hc or b_lc\n\n    @staticmethod\n    def _union_pair(a, b):\n        a_lo, a_hi, a_lc, a_hc = a\n        b_lo, b_hi, b_lc, b_hc = b\n        if a_lo < b_lo:\n            lo, lc = a_lo, a_lc\n        elif b_lo < a_lo:\n            lo, lc = b_lo, b_lc\n        else:\n            lo, lc = a_lo, (a_lc or b_lc)\n        if a_hi > b_hi:\n            hi, hc = a_hi, a_hc\n        elif b_hi > a_hi:\n            hi, hc = b_hi, b_hc\n        else:\n            hi, hc = a_hi, (a_hc or b_hc)\n        return (lo, hi, lc, hc)\n\n    def _normalize(self, ivals):\n        ivals = [iv for iv in ivals if self._valid(*iv)]\n        ivals.sort(key=lambda iv: (iv[0], 0 if iv[2] else 1, iv[1]))\n        result = []\n        for iv in ivals:\n            if result and self._mergeable(result[-1], iv):\n                result[-1] = self._union_pair(result[-1], iv)\n            else:\n                result.append(iv)\n        return result\n\n    @staticmethod\n    def _subtract_one(target, cut):\n        t_lo, t_hi, t_lc, t_hc = target\n        c_lo, c_hi, c_lc, c_hc = cut\n        if c_hi < t_lo or (c_hi == t_lo and not (c_hc and t_lc)):\n            return [target]\n        if c_lo > t_hi or (c_lo == t_hi and not (c_lc and t_hc)):\n            return [target]\n        pieces = []\n        if t_lo < c_lo:\n            pieces.append((t_lo, c_lo, t_lc, not c_lc))\n        elif t_lo == c_lo:\n            if t_lc and not c_lc:\n                pieces.append((t_lo, t_lo, True, True))\n        if c_hi < t_hi:\n            pieces.append((c_hi, t_hi, not c_hc, t_hc))\n        elif c_hi == t_hi:\n            if t_hc and not c_hc:\n                pieces.append((t_hi, t_hi, True, True))\n        return [p for p in pieces if IntervalSet._valid(*p)]\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        if not self._valid(lo, hi, lo_closed, hi_closed):\n            return\n        self._ivals = self._normalize(self._ivals + [(lo, hi, lo_closed, hi_closed)])\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        if not self._valid(lo, hi, lo_closed, hi_closed):\n            return\n        cut = (lo, hi, lo_closed, hi_closed)\n        new_ivals = []\n        for iv in self._ivals:\n            new_ivals.extend(self._subtract_one(iv, cut))\n        self._ivals = self._normalize(new_ivals)\n\n    def contains(self, x):\n        for lo, hi, lc, hc in self._ivals:\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        if not self._ivals:\n            return \"{}\"\n        parts = []\n        for lo, hi, lc, hc in self._ivals:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, \"g\") + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(left + format(lo, \"g\") + \", \" + format(hi, \"g\") + right)\n        return \" u \".join(parts)\n```",
+  "calls": 4,
+  "picked": 2,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "lvup",
+  "seed": 0,
+  "answer": "```python\n\"\"\"IntervalSet: a set of real numbers as a union of intervals with open/closed endpoints.\n\nInternal representation\n-----------------------\nA sorted list of disjoint, non-adjacent, maximal intervals. Each interval is a\n4-tuple ``(lo, hi, lo_closed, hi_closed)``: floats ``lo <= hi`` plus booleans for\nwhether the low/high endpoints are included. A genuine single point ``{v}`` is\nstored as ``(v, v, True, True)``.\n\"\"\"\n\n\nclass IntervalSet:\n    def __init__(self):\n        self._ivals = []\n\n    @staticmethod\n    def _normalize(lo, hi, lo_closed, hi_closed):\n        \"\"\"Return a clean interval tuple, or None if the region is empty.\n\n        Applies the degenerate rule: a zero-width region is the point {lo}\n        only when both endpoints are closed, otherwise empty.\n        \"\"\"\n        if lo > hi:\n            return None\n        if lo == hi:\n            if lo_closed and hi_closed:\n                return (lo, hi, True, True)\n            return None\n        return (lo, hi, bool(lo_closed), bool(hi_closed))\n\n    @staticmethod\n    def _left_key(lo, lo_closed):\n        # Smaller sorts earlier; a closed low endpoint precedes an open one\n        # at the same coordinate (it includes more).\n        return (lo, 0 if lo_closed else 1)\n\n    @staticmethod\n    def _right_key(hi, hi_closed):\n        # Larger sorts later; a closed high endpoint extends past an open one\n        # at the same coordinate.\n        return (hi, 1 if hi_closed else 0)\n\n    @classmethod\n    def _mergeable(cls, a, b):\n        \"\"\"True iff a and b overlap OR touch at a shared endpoint included by\n        at least one side (so their union is a single interval).\"\"\"\n        alo, ahi, alc, ahc = a\n        blo, bhi, blc, bhc = b\n        if cls._left_key(alo, alc) > cls._left_key(blo, blc):\n            alo, ahi, alc, ahc, blo, bhi, blc, bhc = blo, bhi, blc, bhc, alo, ahi, alc, ahc\n        # a is the left-most interval; check whether b starts before a ends.\n        if ahi < blo:\n            return False\n        if ahi > blo:\n            return True\n        return ahc or blc\n\n    @classmethod\n    def _union_two(cls, a, b):\n        alo, ahi, alc, ahc = a\n        blo, bhi, blc, bhc = b\n        if cls._left_key(alo, alc) <= cls._left_key(blo, blc):\n            lo, lc = alo, alc\n        else:\n            lo, lc = blo, blc\n        if cls._right_key(ahi, ahc) >= cls._right_key(bhi, bhc):\n            hi, hc = ahi, ahc\n        else:\n            hi, hc = bhi, bhc\n        return (lo, hi, lc, hc)\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        new = self._normalize(lo, hi, lo_closed, hi_closed)\n        if new is None:\n            return\n        merged = []\n        inserted = False\n        cur = new\n        for iv in self._ivals:\n            if self._mergeable(cur, iv):\n                cur = self._union_two(cur, iv)\n            elif self._left_key(iv[0], iv[2]) < self._left_key(cur[0], cur[2]):\n                merged.append(iv)\n            else:\n                if not inserted:\n                    merged.append(cur)\n                    inserted = True\n                merged.append(iv)\n        if not inserted:\n            merged.append(cur)\n        self._ivals = merged\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        cut = self._normalize(lo, hi, lo_closed, hi_closed)\n        if cut is None:\n            return\n        clo, chi, clc, chc = cut\n        result = []\n        for iv in self._ivals:\n            result.extend(self._subtract_one(iv, clo, chi, clc, chc))\n        self._ivals = result\n\n    @classmethod\n    def _subtract_one(cls, iv, clo, chi, clc, chc):\n        \"\"\"Subtract region (clo, chi, clc, chc) from interval iv; return the\n        0, 1, or 2 surviving pieces.\"\"\"\n        ilo, ihi, ilc, ihc = iv\n        # No real value in common: region lies entirely past one end of iv.\n        if ihi < clo or (ihi == clo and not (ihc and clc)):\n            return [iv]\n        if chi < ilo or (chi == ilo and not (chc and ilc)):\n            return [iv]\n        out = []\n        # Left survivor: iv extends left of the cut's low boundary.\n        if cls._left_key(ilo, ilc) < cls._left_key(clo, clc):\n            piece = cls._normalize(ilo, clo, ilc, not clc)\n            if piece is not None:\n                out.append(piece)\n        # Right survivor: iv extends right of the cut's high boundary.\n        if cls._right_key(ihi, ihc) > cls._right_key(chi, chc):\n            piece = cls._normalize(chi, ihi, not chc, ihc)\n            if piece is not None:\n                out.append(piece)\n        return out\n\n    def contains(self, x):\n        for ilo, ihi, ilc, ihc in self._ivals:\n            if x < ilo or x > ihi:\n                continue\n            if x == ilo and not ilc:\n                continue\n            if x == ihi and not ihc:\n                continue\n            return True\n        return False\n\n    def canonical(self):\n        if not self._ivals:\n            return \"{}\"\n        parts = []\n        for ilo, ihi, ilc, ihc in self._ivals:\n            if ilo == ihi:\n                parts.append(\"{\" + format(ilo, \"g\") + \"}\")\n            else:\n                left = \"[\" if ilc else \"(\"\n                right = \"]\" if ihc else \")\"\n                parts.append(left + format(ilo, \"g\") + \", \" + format(ihi, \"g\") + right)\n        return \" u \".join(parts)\n```",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "{\"rubric\": [\n{\"id\": 1, \"criterion\": \"Output is exactly ONE Python code block, nothing else (no prose before/after, no second block). Module defines `class IntervalSet` with that exact name; a fresh `IntervalSet()` is empty (canonical() == '{}').\"},\n{\"id\": 2, \"criterion\": \"Exact API signatures present: `__init__(self)`, `add(self, lo, hi, lo_closed, hi_closed)`, `remove(self, lo, hi, lo_closed, hi_closed)`, `contains(self, x)`, `canonical(self)` \u2014 names and parameter lists match exactly.\"},\n{\"id\": 3, \"criterion\": \"Degenerate rule applied for both add AND remove: when lo == hi, treated as the single point {lo} only if both flags True; otherwise empty and the call is a no-op.\"},\n{\"id\": 4, \"criterion\": \"Touch-merge on add: [1,2) u [2,3] -> [1,3]; [1,2) u (2,3] stays two intervals (2 excluded by both); inserting {2} between them -> [1,3].\"},\n{\"id\": 5, \"criterion\": \"Overlap-merge on add: e.g. [1,3] then [2,5] -> single [1,5]; result is always disjoint, non-adjacent, maximal intervals.\"},\n{\"id\": 6, \"criterion\": \"Remove splits with closedness flip: remove [2,3] from [1,5] -> [1,2) u (3,5]; remove (1,3) from [1,3] -> {1} u {3}; remove {2} from [1,5] -> [1,2) u (2,5].\"},\n{\"id\": 7, \"criterion\": \"Remove touch-vs-shave: remove (5,6) from [1,5] leaves [1,5] unchanged; remove [5,6] from [1,5] leaves [1,5).\"},\n{\"id\": 8, \"criterion\": \"contains(x) respects open/closed endpoints: [1,2) -> contains(1)=True, contains(2)=False; {2} -> contains(2)=True; returns a real bool.\"},\n{\"id\": 9, \"criterion\": \"Canonical formatting: numbers via format(v,'g'); matched [/( opening and ]/) closing brackets; `, ` between values; single point as {v}; intervals joined by ' u '; empty set as '{}'.\"},\n{\"id\": 10, \"criterion\": \"Canonical output is ascending-sorted, pairwise disjoint, and maximal; e.g. add [1,2) then {2} then (2,3] collapses to a single [1,3].\"},\n{\"id\": 11, \"criterion\": \"Genuine point (equal both-closed bounds) renders as {v}, never [v, v]; a normal distinct-endpoint interval never renders as {v}.\"},\n{\"id\": 12, \"criterion\": \"Module is self-contained: parses/imports without error, no I/O or __main__ block required, and runs without throwing on the example cases.\"}\n]}",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T1_intervalset",
+  "arm": "lvup",
+  "seed": 1,
+  "answer": "```python\nclass IntervalSet:\n    \"\"\"Maintain a set of reals as a union of intervals with open/closed endpoints.\n\n    Internal representation:\n        self._ivs is a list of tuples (lo, lc, hi, hc) where\n            lo, hi  : float endpoint values (lo <= hi)\n            lc, hc  : booleans, whether the low/high endpoint is included\n        The list is kept canonical: sorted ascending, disjoint, and maximal\n        (no two stored intervals can be merged). Single points are stored as\n        (v, True, v, True).\n    \"\"\"\n\n    def __init__(self):\n        self._ivs = []\n\n    # ---------------------------------------------------------------- helpers\n\n    @staticmethod\n    def _is_empty_piece(lo, hi, lo_closed, hi_closed):\n        \"\"\"An interval describes the empty set when lo > hi, or lo == hi but\n        it is not the fully-closed single point.\"\"\"\n        if lo > hi:\n            return True\n        if lo == hi and not (lo_closed and hi_closed):\n            return True\n        return False\n\n    @staticmethod\n    def _touch_or_overlap(a, b):\n        \"\"\"Given two intervals a, b each (lo, lc, hi, hc) with a sorting before\n        or equal to b by start, decide whether their union is a single interval,\n        i.e. they overlap OR touch at a shared endpoint included by at least one\n        side. Assumes a starts at or before b.\"\"\"\n        a_lo, a_lc, a_hi, a_hc = a\n        b_lo, b_lc, b_hi, b_hc = b\n        # They are separate if a ends strictly before b starts.\n        if a_hi < b_lo:\n            return False\n        if a_hi > b_lo:\n            return True  # genuine overlap on values\n        # a_hi == b_lo : they touch at this single value; merge iff at least one\n        # side includes it.\n        return a_hc or b_lc\n\n    @staticmethod\n    def _union_pair(a, b):\n        \"\"\"Union of two intervals known to overlap/touch-merge. Returns the\n        combined (lo, lc, hi, hc).\"\"\"\n        a_lo, a_lc, a_hi, a_hc = a\n        b_lo, b_lc, b_hi, b_hc = b\n        # low endpoint\n        if a_lo < b_lo:\n            lo, lc = a_lo, a_lc\n        elif b_lo < a_lo:\n            lo, lc = b_lo, b_lc\n        else:\n            lo, lc = a_lo, (a_lc or b_lc)\n        # high endpoint\n        if a_hi > b_hi:\n            hi, hc = a_hi, a_hc\n        elif b_hi > a_hi:\n            hi, hc = b_hi, b_hc\n        else:\n            hi, hc = a_hi, (a_hc or b_hc)\n        return (lo, lc, hi, hc)\n\n    def _normalize(self, pieces):\n        \"\"\"Take an arbitrary list of (lo, lc, hi, hc) pieces and produce the\n        canonical sorted, disjoint, maximal list.\"\"\"\n        pieces = [p for p in pieces\n                  if not self._is_empty_piece(p[0], p[2], p[1], p[3])]\n        if not pieces:\n            return []\n        # sort by start point (value, then closed-before-open)\n        pieces.sort(key=lambda p: (p[0], 0 if p[1] else 1))\n        merged = [pieces[0]]\n        for p in pieces[1:]:\n            last = merged[-1]\n            if self._touch_or_overlap(last, p):\n                merged[-1] = self._union_pair(last, p)\n            else:\n                merged.append(p)\n        return merged\n\n    # ---------------------------------------------------------------- API\n\n    def add(self, lo, hi, lo_closed, hi_closed):\n        lo = float(lo)\n        hi = float(hi)\n        lo_closed = bool(lo_closed)\n        hi_closed = bool(hi_closed)\n        if self._is_empty_piece(lo, hi, lo_closed, hi_closed):\n            return  # no-op for empty/degenerate\n        self._ivs = self._normalize(self._ivs + [(lo, lo_closed, hi, hi_closed)])\n\n    def remove(self, lo, hi, lo_closed, hi_closed):\n        lo = float(lo)\n        hi = float(hi)\n        lo_closed = bool(lo_closed)\n        hi_closed = bool(hi_closed)\n        if self._is_empty_piece(lo, hi, lo_closed, hi_closed):\n            return  # removing nothing\n        r_lo, r_lc, r_hi, r_hc = lo, lo_closed, hi, hi_closed\n        result = []\n        for a_lo, a_lc, a_hi, a_hc in self._ivs:\n            result.extend(\n                self._subtract_one(a_lo, a_lc, a_hi, a_hc,\n                                   r_lo, r_lc, r_hi, r_hc)\n            )\n        self._ivs = self._normalize(result)\n\n    def _subtract_one(self, a_lo, a_lc, a_hi, a_hc, r_lo, r_lc, r_hi, r_hc):\n        \"\"\"Subtract removal interval r from stored interval a. Returns a list of\n        0, 1, or 2 surviving pieces.\"\"\"\n        # r entirely to the left of a (touching value not in BOTH removes nothing)\n        if r_hi < a_lo or (r_hi == a_lo and not (r_hc and a_lc)):\n            return [(a_lo, a_lc, a_hi, a_hc)]\n        # r entirely to the right of a\n        if r_lo > a_hi or (r_lo == a_hi and not (r_lc and a_hc)):\n            return [(a_lo, a_lc, a_hi, a_hc)]\n\n        pieces = []\n\n        # Left surviving piece: part of a strictly left of r's start.\n        if a_lo < r_lo:\n            # new high endpoint is r_lo; included iff r does NOT include r_lo.\n            pieces.append((a_lo, a_lc, r_lo, not r_lc))\n        elif a_lo == r_lo:\n            # point {a_lo} survives iff a includes it but r does not.\n            if a_lc and not r_lc:\n                pieces.append((a_lo, True, a_lo, True))\n\n        # Right surviving piece: part of a strictly right of r's end.\n        if a_hi > r_hi:\n            pieces.append((r_hi, not r_hc, a_hi, a_hc))\n        elif a_hi == r_hi:\n            if a_hc and not r_hc:\n                pieces.append((a_hi, True, a_hi, True))\n\n        pieces = [p for p in pieces\n                  if not self._is_empty_piece(p[0], p[2], p[1], p[3])]\n        return pieces\n\n    def contains(self, x):\n        for lo, lc, hi, hc in self._ivs:\n            if lo < x < hi:\n                return True\n            if x == lo and lc:\n                return True\n            if x == hi and hc:\n                return True\n        return False\n\n    def canonical(self):\n        if not self._ivs:\n            return \"{}\"\n        parts = []\n        for lo, lc, hi, hc in self._ivs:\n            if lo == hi:\n                parts.append(\"{\" + format(lo, 'g') + \"}\")\n            else:\n                left = \"[\" if lc else \"(\"\n                right = \"]\" if hc else \")\"\n                parts.append(left + format(lo, 'g') + \", \" + format(hi, 'g') + right)\n        return \" u \".join(parts)\n```",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "1. **Single Python code block, correct structure**: Output is exactly one Python code block and nothing else outside it; contains `class IntervalSet:`; no I/O and no `__main__` block; the module parses as valid Python and imports without error.\n\n2. **Exact API signatures**: `IntervalSet()` starts empty; methods present with exact names/parameter order: `add(self, lo, hi, lo_closed, hi_closed)`, `remove(self, lo, hi, lo_closed, hi_closed)`, `contains(self, x)`, `canonical(self)`.\n\n3. **Degenerate `add` rule**: `add(a, a, True, True)` inserts point `{a}`; `add(a, a, ...)` with either flag False is a no-op (set unchanged).\n\n4. **Degenerate `remove` rule**: `remove(a, a, True, True)` removes point `{a}` if present; `remove(a, a, ...)` with either flag False is a no-op.\n\n5. **Merge-on-touch-with-inclusion**: `[1,2)` then `[2,3]` \u2192 `[1, 3]`; `[1,2)` plus `(2,3]` stays two intervals; `{2}` added between them \u2192 `[1, 3]`; overlapping intervals also merge.\n\n6. **Remove splits and flips closedness**: removing `[2,3]` from `[1,5]` \u2192 `[1, 2) u (3, 5]`; removing `(1,3)` from `[1,3]` \u2192 `{1} u {3}`; removing `{2}` from `[1,5]` \u2192 `[1, 2) u (2, 5]`.\n\n7. **Remove boundary-touch semantics**: removing `(5,6)` from `[1,5]` leaves `[1, 5]`; removing `[5,6]` from `[1,5]` leaves `[1, 5)`.\n\n8. **`contains` respects endpoints**: for `[1, 3)`: `contains(1)`=True, `contains(3)`=False, `contains(2)`=True, `contains(0)`/`contains(4)`=False; for `{2}`: `contains(2)`=True, neighbors False; empty set `contains` returns False.\n\n9. **`canonical` formatting exactness**: intervals joined by `' u '` (single spaces, lowercase u); each rendered `[`/`(` + `format(lo,'g')` + `, ` + `format(hi,'g')` + `]`/`)`; single point as `{v}` with `format(v,'g')`; empty set as `\"{}\"`; no leading/trailing separators.\n\n10. **Canonical is sorted, disjoint, maximal, minimal**: ascending order, non-overlapping, non-adjacent-mergeable, single points rendered `{v}` not `[v, v]`; representation is unique regardless of operation order.\n\n11. **Idempotence / robustness**: duplicate/overlapping `add`s collapse (adding `[1,5]` twice == once); removing an absent interval is a safe no-op; removing everything yields `\"{}\"`.\n\n12. **No crashes on edge cases**: degenerate adds/removes and touch-only operations never raise.",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 40,
+   "total": 40,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "base-opus",
+  "seed": 0,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "base-opus",
+  "seed": 1,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "base-fable",
+  "seed": 0,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "base-fable",
+  "seed": 1,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "selfrefine",
+  "seed": 0,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "selfrefine",
+  "seed": 1,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "bo3",
+  "seed": 0,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 4,
+  "picked": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "bo3",
+  "seed": 1,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 4,
+  "picked": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "lvup",
+  "seed": 0,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "**1. Output format \u2014 single Python code block only**\nPASS iff the answer consists of exactly one Python code block containing the full module and no prose, explanation, or text outside it (a language tag like ```python is acceptable).\n\n**2. Public API and structure preserved**\nPASS iff the answer keeps the class `RateWindow` with `__init__(self, limit, window_s)`, methods `ban`, `_banned`, `allow` with identical signatures, retains the `collections` import, and does not rename/remove public members or rewrite into a fundamentally different structure.\n\n**3. Ban-expiry boundary bug fixed (`_banned`)**\nPASS iff `_banned` returns banned only when `now < until` (strictly), e.g. `return until is not None and now < until`. FAIL if it still uses `now <= until` or any form that treats `t == until` as banned.\n\n**4. Refused-because-banned call is NOT recorded**\nPASS iff the banned branch in `allow` does NOT append `now` to the deque before returning False (the `q.append(now)` inside the banned branch must be removed). FAIL if a refused (banned) call still records a timestamp.\n\n**5. Limit comparison bug fixed (off-by-one)**\nPASS iff the refusal condition uses `len(q) >= self.limit` (refuse when already at the limit), so that at most `limit` calls are allowed. FAIL if it remains `len(q) > self.limit` (which permits `limit + 1`).\n\n**6. Pruning boundary bug fixed (half-open window)**\nPASS iff the prune loop removes all timestamps `<= now - window_s`, i.e. condition `q[0] <= now - self.window_s`. FAIL if it remains `q[0] < now - self.window_s` (which leaves a timestamp exactly at `now - window_s` inside, violating the half-open `(now - window_s, now]` interval and the memory-hygiene rule).\n\n**7. Exactly the four intended bugs are addressed**\nPASS iff the answer fixes precisely these four defects: (a) `_banned` boundary, (b) recording on banned-refusal, (c) `len(q) > limit` \u2192 `>=`, (d) prune `<` \u2192 `<=`. No required fix is omitted.\n\n**8. No new bugs / no over-editing introduced**\nPASS iff the answer does not introduce regressions \u2014 e.g. it still prunes before checking, still appends `now` on an allowed call, returns booleans correctly, does not reorder logic so that pruning is skipped, and does not alter `ban` or `__init__` behavior incorrectly. Minimal-change spirit respected (no gratuitous rewrites that break semantics).\n\n**9. Allowed call is still recorded exactly once**\nPASS iff a permitted call appends `now` exactly one time and returns True, with no double-append and no missing append.\n\n**10. `allow` never raises for unseen identities**\nPASS iff `allow` still uses `setdefault` (or equivalent) so a never-before-seen identity does not raise KeyError, and `_banned` safely handles identities with no ban entry (`.get` returning None).\n\n**11. Pruning occurs on every `allow` call before the limit check**\nPASS iff the prune-while-loop runs at the start of `allow` for every call (including eventually-refused ones, as written), ensuring the limit check operates on the pruned deque and memory hygiene holds. FAIL if a fix moves pruning after the limit/ban checks such that it can be skipped.\n\n**12. Module is syntactically valid and importable**\nPASS iff the returned code is valid Python that would parse and import without SyntaxError/IndentationError (correct indentation, balanced constructs, valid identifiers).",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T2_ratewindow",
+  "arm": "lvup",
+  "seed": 1,
+  "answer": "```python\nimport collections\n\nclass RateWindow:\n    def __init__(self, limit, window_s):\n        self.limit = limit\n        self.window_s = window_s\n        self.calls = {}\n        self.bans = {}\n\n    def ban(self, identity, until):\n        self.bans[identity] = until\n\n    def _banned(self, identity, now):\n        until = self.bans.get(identity)\n        return until is not None and now < until\n\n    def allow(self, identity, now):\n        q = self.calls.setdefault(identity, collections.deque())\n        while q and q[0] <= now - self.window_s:\n            q.popleft()\n        if self._banned(identity, now):\n            return False\n        if len(q) >= self.limit:\n            return False\n        q.append(now)\n        return True\n```",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "# Success Rubric\n\nEach criterion is binary (pass/fail) and mechanically checkable against the submitted answer.\n\n1. **Output format \u2014 single Python code block only.** The response contains exactly one fenced Python code block and no prose, explanation, or text outside it.\n\n2. **Module integrity preserved.** The fixed module retains `import collections`, the `RateWindow` class, and all four methods (`__init__`, `ban`, `_banned`, `allow`) with unchanged public signatures; `__init__` still initializes `self.limit`, `self.window_s`, `self.calls`, and `self.bans`.\n\n3. **Ban semantics fixed (Bug #1).** `_banned` returns banned iff `now < until` (strict). The comparison uses `<`, not `<=`; at `now == until` the identity is NOT banned.\n\n4. **Count/limit comparison fixed (Bug #2).** The pre-append check refuses when the recorded count is already at the limit \u2014 i.e. it uses `len(q) >= self.limit` (not `> self.limit`), so at most `limit` calls are admitted per window.\n\n5. **Window boundary fixed (Bug #3).** Pruning/window membership treats a timestamp exactly equal to `now - window_s` as OUTSIDE the window. The eviction condition admits `<= now - self.window_s` (e.g. `q[0] <= now - self.window_s`), making the window half-open `(now - window_s, now]`.\n\n6. **Refused calls are never recorded (Bug #4).** On the banned branch, the code does NOT append `now` to the deque (the `q.append(now)` before `return False` is removed). No refusal path (banned or over-limit) records a timestamp.\n\n7. **Accepted calls are still recorded.** The success path appends `now` to the deque and returns `True` exactly once for an admitted call.\n\n8. **Pruning happens on every allow call.** The prune loop runs before the accept/refuse decision so that timestamps `<= now - window_s` are removed on every `allow` invocation, including ones that end up refused.\n\n9. **Never raises for unseen identities.** `allow` uses `setdefault` (or equivalent) so a never-before-seen identity does not raise; `_banned` handles a missing identity via `.get` returning `None` without raising.\n\n10. **Exactly the four spec bugs fixed, nothing else broken.** Changes are confined to the four fixes (`_banned` comparison, limit comparison, prune comparison, removal of the banned-branch append); no extraneous behavioral rewrites that alter correct behavior.\n\n11. **Correct ordering of checks preserved.** In `allow`, the prune runs first, then the ban check, then the limit check, then append \u2014 matching the original control flow with no behavior-changing reordering.\n\n12. **Boundary correctness is self-consistent.** A call at timestamp exactly `now` counts as inside the window `(now - window_s, now]`, and the chosen comparison operators are mutually consistent so that at most `limit` calls are admitted in the half-open interval (no off-by-one between prune and count logic).",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 10,
+   "total": 10,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-opus",
+  "seed": 0,
+  "answer": "Meridian distributes keys across nodes using consistent hashing. Each request routes to a replica chosen by proximity, which keeps latency predictable for readers everywhere. Engineers designed Meridian to survive partitions without sacrificing throughput or correctness. Writes propagate through a gossip protocol that gradually reconciles divergent state. Under sustained load, Meridian shards hot ranges automatically so no single node becomes a bottleneck! Operators tune replication to balance durability against tail latency across regions. With 3 replicas and a quorum of 2, Meridian confirms writes once enough nodes acknowledge them, bounding worst-case latency. Could any store balance speed, safety, and simplicity more gracefully?",
+  "calls": 1,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C2 failed",
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-opus",
+  "seed": 1,
+  "answer": "Meridian stores keys across many nodes with relentless reliability. Engineers chose Meridian because its tunable replication keeps tail latency predictable under genuine stress. Each shard gossips heartbeats so the cluster heals quickly after a node fails. Clients route requests through a coordinator that balances load and trims latency. Under heavy traffic, Meridian shifts hot ranges toward cooler replicas almost instantly. Adaptive caching layers absorb bursts and protect overall latency budgets fiercely! Operators tune just 2 knobs, and the system rebalances within 3 seconds. Could any rival truly match what Meridian quietly achieves every single day?",
+  "calls": 1,
+  "score": 0.9167,
+  "score_detail": {
+   "passed": 11,
+   "total": 12,
+   "failures": [
+    "C2 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-fable",
+  "seed": 0,
+  "answer": "Meridian is a distributed key-value store built for speed. Each cluster spreads keys evenly across 64 commodity nodes using consistent hashing, so hot partitions rarely overwhelm any single machine. Reads are served from the nearest local replica first, which keeps latency low even when traffic spikes sharply. Writes flow through a flexible quorum, so Meridian trades a little extra latency for strong durability guarantees. Under heavy load, the scheduler shifts requests toward idle replicas and smooths tail latency across the fleet. Operators can add fresh capacity in minutes, and automatic rebalancing happens quietly without any downtime or manual planning. Meridian even survived a full simulated region failure during our grueling 12 hour chaos drill! With replication this simple and recovery this calm, why would your team run anything besides Meridian?",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-fable",
+  "seed": 1,
+  "answer": "Meridian is a distributed key-value store engineered for speed. Every cluster replicates writes across multiple nodes at once, keeping read latency consistently low even when an entire region fails without warning. Operators can deploy Meridian on as few as 3 commodity machines, then grow the cluster gradually as workloads expand over time. Consistent hashing spreads keys evenly across the ring, so hotspots rarely form and rebalancing stays cheap during routine maintenance windows. Under heavy load, Meridian shards incoming traffic across replicas and keeps tail latency predictable for every tenant. Benchmarks show throughput climbing past 900 requests per node each second, a remarkable figure for such modest hardware! Gossip protocols let Meridian detect node failures quickly, trimming recovery latency without manual operator work or fragile external coordinators. Could your own services benefit from storage this resilient, simple, and fast?",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "selfrefine",
+  "seed": 0,
+  "answer": "Meridian distributes keys evenly across nodes using consistent hashing. Each node in the Meridian cluster gossips its membership state to nearby peers continuously, gracefully, and reliably. Writes replicate to 3 successor nodes, ensuring strong durability even when several machines crash unexpectedly or restart. Read requests resolve quickly because nearby replicas keep tunable latency budgets close to every requesting client. Under sustained traffic load, Meridian shards hot key ranges automatically, smoothing observed tail latency without any manual operator intervention! Conflicts merge through compact vector clocks, so concurrent updates from different writers never silently overwrite each other anywhere. Operators carefully tune the replication factor to balance freshness, write latency, storage cost, raw throughput, and recovery speed. Could Meridian truly become the resilient, elastic backbone for your next globally consistent application, scaling smoothly past 90 regions?",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "selfrefine",
+  "seed": 1,
+  "answer": "Meridian distributes keys across a continuously self-managing cluster of cooperating nodes. Each write replicates to 3 peers before the coordinator confirms success, which keeps tail latency predictable even when individual machines fail without warning. Clients hash identifiers and route requests directly toward owners, so Meridian quietly avoids any central bottleneck that would inflate latency. Engineers tune consistency per request, deliberately trading freshness against raw speed to match whatever workload they happen to serve. Under heavy seasonal pressure, Meridian shards hot ranges automatically and migrates them gently toward idle capacity wherever spare room appears. Background repair scans gossip steadily, reconciling stale replicas without ever blocking foreground traffic across 50 widely dispersed regions. Operators consistently admire how Meridian stays quick and dependable, so they happily watch that latency stay reassuringly flat! What more could any genuinely demanding engineering team reasonably want from one elegant storage layer?",
+  "calls": 5,
+  "score": 0.9167,
+  "score_detail": {
+   "passed": 11,
+   "total": 12,
+   "failures": [
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "bo3",
+  "seed": 0,
+  "answer": "Meridian is a fictional distributed key-value store built for speed. It replicates every key across regional clusters using a tunable quorum protocol that engineers can adjust freely. Each write commits once a configurable majority of nodes acknowledges receipt, keeping tail latency predictable during failures. Operators love how Meridian collapses replication lag while preserving strong consistency guarantees! Under sustained load, the system shards keys across 64 partitions, balancing traffic and trimming latency at the edges. Smart routing sends each request toward the nearest healthy replica, which slashes round-trip latency dramatically. Background compaction runs every 15 minutes, reclaiming space without pausing live traffic on Meridian. So why do so many teams keep choosing Meridian over older, slower alternatives?",
+  "calls": 4,
+  "picked": 1,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C2 failed",
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "bo3",
+  "seed": 1,
+  "answer": "Meridian distributes keys across a self-healing ring of nodes. Each write replicates to three peers, so a single failure never costs you availability or durability. Clients read from the nearest replica, which keeps tail latency low even when regions drift apart. The Meridian gossip layer constantly reconciles versions using vector clocks, pruning stale entries automatically. Under heavy contention, Meridian throttles writers gracefully rather than dropping their requests! Operators love how predictable the latency curves stay during rebalancing and node recovery. Benchmarks show median latency near 2 milliseconds, with the slowest requests settling under tight bounds. Why would any team building reliable storage not reach for Meridian today?",
+  "calls": 4,
+  "picked": 3,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C2 failed",
+    "C11 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "lvup",
+  "seed": 0,
+  "answer": "Meridian is a fictional distributed key-value store engineered for speed. It shards keys across many independent nodes using consistent hashing, keeping replicas synchronized through a strict quorum protocol. Operators praise Meridian because its tail latency stays remarkably flat even when sudden traffic surges arrive. Each write fans out to 3 replicas, while reads consult the nearest healthy peer to minimize latency. Under partition, Meridian gracefully degrades, serving cached results and queueing pending updates for later reconciliation. Its gossip layer detects node failures within 2 seconds and reroutes requests around the affected region quickly. Engineers love how Meridian exposes tunable consistency, letting them trade freshness for lower latency whenever shifting workloads demand it! So why do so many busy teams keep choosing this elegant, resilient, refreshingly simple store?",
+  "calls": 12,
+  "verdicts": [
+   "FAIL",
+   "FAIL"
+  ],
+  "rubric": "1. **Output purity**: The answer contains ONLY the paragraph \u2014 no preamble, no explanation, no labels, no markdown fences, no trailing commentary.\n\n2. **Sentence count = 8**: Splitting on maximal spans ending in `.`, `!`, or `?` yields exactly 8 non-empty sentences.\n\n3. **Word count 120\u2013160**: Whitespace-separated token count of the whole paragraph is \u2265120 and \u2264160 inclusive.\n\n4. **First sentence = 9 words**: The first sentence (through its terminating punctuation) contains exactly 9 whitespace-separated tokens.\n\n5. **'latency' exactly 3\u00d7**: The whole word 'latency' (case-insensitive, standalone word) appears exactly 3 times.\n\n6. **'Meridian' exactly 4\u00d7**: The whole word 'Meridian' (case-sensitive \u2014 lowercase 'meridian' does NOT count) appears exactly 4 times.\n\n7. **No sentence > 24 words**: Every one of the 8 sentences has \u226424 whitespace-separated words.\n\n8. **Last sentence ends with '?'**: The final sentence's terminating character is a question mark.\n\n9. **Exactly one '!' sentence**: Exactly one sentence ends with an exclamation mark, and it is not the last (which must end with '?').\n\n10. **'data' never appears**: The whole word 'data' (case-insensitive) appears zero times.\n\n11. **Fifth sentence starts with 'Under'**: The 5th sentence's first word is exactly 'Under' (capital U, exact case).\n\n12. **Exactly 2 digit-numbers**: Exactly 2 numbers written in digits appear (each = maximal run of digits with optional internal commas/decimal point), no more and no fewer.\n\n13. **No word > 14 alphabetic chars**: Every word, counting only alphabetic characters, has length \u226414.\n\n14. **Topical validity**: The paragraph coherently describes a fictional distributed key-value store named Meridian, on-topic rather than filler.\n\nGrading note: Fail the entire answer if ANY single mechanical constraint (criteria 2\u201313) is violated, since the task requires ALL constraints simultaneously. Check criteria 2 and 9 jointly (a terminating '!' also counts toward the 8-sentence split), and apply the per-constraint capitalization rules exactly (case-insensitive for 'latency'/'data'; case-sensitive for 'Meridian' and 'Under').",
+  "score": 0.9167,
+  "score_detail": {
+   "passed": 11,
+   "total": 12,
+   "failures": [
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "lvup",
+  "seed": 1,
+  "answer": "Meridian is a fictional distributed key-value store built for speed. It spreads keys across many nodes using consistent hashing and gossip, bounding tail latency under sudden churn. Each write is replicated to 5 peers before the cluster acknowledges success, keeping median latency steady and predictable. Clients route requests through a thin proxy that tracks node health and observed latency carefully. Under sustained load, Meridian shifts hot ranges toward cooler machines, smoothing pressure evenly across the entire ring. Operators love how its dashboard exposes clear per-region timings without any manual tuning at all! The Meridian engine persists records to a log-structured store that compacts lazily using 8 background threads. So why would any team running a demanding workload not give Meridian a serious, sustained try?",
+  "calls": 12,
+  "verdicts": [
+   "FAIL",
+   "FAIL"
+  ],
+  "rubric": "1. **Sentence count is exactly 8** \u2014 Splitting on maximal spans ending in `.`/`!`/`?` yields exactly 8 non-empty sentences (constraint 1). Watch for a decimal point inside a number being miscounted as a boundary.\n\n2. **Word count is 120\u2013160 inclusive** \u2014 Whitespace-separated token count N satisfies 120 \u2264 N \u2264 160 (constraint 2).\n\n3. **First sentence has exactly 9 words** \u2014 Text up to and including the first terminal punctuation has exactly 9 whitespace tokens (constraint 3).\n\n4. **'latency' appears exactly 3 times** \u2014 Case-insensitive whole-word count equals 3 (constraint 4).\n\n5. **'Meridian' appears exactly 4 times, case-sensitive** \u2014 Whole-word, case-sensitive count equals 4; lowercased `meridian` does not count (constraint 5).\n\n6. **No sentence exceeds 24 words** \u2014 Every one of the 8 sentences has \u2264 24 whitespace tokens (constraint 6).\n\n7. **Last sentence ends with `?`** \u2014 Final character of the paragraph is `?` (constraint 7).\n\n8. **Exactly one sentence ends with `!`** \u2014 Exactly one of the 8 sentences terminates in `!` (constraint 8).\n\n9. **'data' never appears** \u2014 Case-insensitive whole-word search returns zero matches; substrings like \"database\" are allowed, a bare `data` token is an automatic fail (constraint 9).\n\n10. **Fifth sentence begins with 'Under'** \u2014 The 5th parsed sentence's first word is exactly `Under` with that capitalization (constraint 10).\n\n11. **Exactly 2 digit-numbers** \u2014 Maximal runs of digits (internal commas/decimal counting as one number) total exactly 2 across the paragraph (constraint 11). Watch for stray years/version numbers.\n\n12. **No word longer than 14 alphabetic characters** \u2014 Every word's alphabetic-only length is \u2264 14 (constraint 12).\n\n13. **Output contains ONLY the paragraph** \u2014 No preamble, title, explanation, surrounding quotes, markdown fences, or trailing commentary (output-format requirement).\n\n14. **Single coherent paragraph about Meridian the distributed key-value store** \u2014 One paragraph (no internal blank lines), on-topic prose describing the fictional store, not incoherent constraint-gaming filler (substantive requirement).\n\nA perfect answer passes all 14. Highest-risk failure modes: first-sentence word count (3), digit-number count drifting off 2 (11), decimal points corrupting sentence count (1/11 interaction), and accidental preamble despite \"output ONLY the paragraph\" (13).",
+  "score": 0.9167,
+  "score_detail": {
+   "passed": 11,
+   "total": 12,
+   "failures": [
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-opus",
+  "seed": 2,
+  "answer": "Meridian distributes keys across a self-healing ring of nodes. Each write propagates through gossip until every replica agrees, and Meridian repairs stale copies in the background. Operators tune quorum sizes to balance durability against the latency that clients feel during peak traffic. Reads usually resolve from the nearest region, which keeps tail latency low and predictable for global users. Under sustained load, Meridian shards hot partitions automatically, spreading pressure so no single node becomes a painful bottleneck. The system targets 99.9 percent availability while keeping median write latency beneath a handful of milliseconds. Engineers configure a replication factor of 3 for most clusters, trading a little extra storage for stronger fault tolerance. Could Meridian truly become the calm, dependable backbone your team has always wanted?",
+  "calls": 1,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C1 failed",
+    "C8 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-opus",
+  "seed": 3,
+  "answer": "Meridian is a fictional distributed key-value store built for speed. It shards keys across many nodes using a consistent hashing ring. Each write travels to a primary replica, then propagates asynchronously while keeping tail latency remarkably low. Engineers love how Meridian survives node failures without manual intervention! Under heavy traffic, the system reroutes requests and trims latency by skipping cold replicas. Meridian keeps a hot working set cached in memory across 3 regional clusters. The coordinator gossips health signals every 50 milliseconds, so stale replicas vanish quickly and average latency stays predictable. Could any rival truly match what Meridian quietly achieves?",
+  "calls": 1,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C2 failed",
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-fable",
+  "seed": 2,
+  "answer": "Meridian is a distributed key-value store built for speed. Each node owns a replicated shard, serving reads locally so that latency stays predictable even when networks behave badly. Writes travel through a consensus log that orders every mutation, keeping replicas consistent across regions without forcing clients to wait on slow followers. A Meridian cluster can stretch to 512 nodes and rebalance itself automatically, with no operator ever touching a shard map! Under heavy load, an adaptive scheduler sheds background work first, protecting tail latency for interactive traffic. Operators describe intent in one manifest, and Meridian chooses replication factors, placement, and compaction schedules on its own. Published benchmarks report median read latency near 3 milliseconds on ordinary hardware, with steady throughput during rolling upgrades. Could Meridian become the quiet backbone of your next platform?",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "base-fable",
+  "seed": 3,
+  "answer": "Meridian is a distributed key-value store built for speed. Each node owns a slice of the keyspace and replicates writes to 3 peers across separate racks. Reads are served straight from memory, so median latency stays below a few milliseconds even during a messy failover. Meridian gossips cluster state constantly, detecting failed peers within seconds and rerouting client traffic without any manual help. Under heavy load, the scheduler sheds background work first, protecting tail latency before anything else. Benchmarks on a 64 node cluster showed steady throughput while write latency barely moved at all! Operators tune Meridian through a single declarative file, and rolling upgrades happen one rack at a time. With replication, gossip, and graceful shedding built in, why would anyone run a cache without Meridian?",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "selfrefine",
+  "seed": 2,
+  "answer": "Meridian is a fictional distributed key-value store engineered carefully. Each node in Meridian gossips heartbeats steadily across the ring, so failures heal automatically without operator intervention. Replicas synchronize through a tunable quorum protocol that keeps tail latency predictable even under unexpectedly heavy concurrent load. Engineers everywhere admire how cleanly Meridian shaves latency while never quietly sacrificing its strong consistency guarantees. Under partition, the system gracefully favors availability while bounding stale reads to roughly 50 milliseconds for cautious clients. Writes commit safely once 3 replies arrive, which trims latency dramatically across distant regions and busy clusters! Operators carefully tune cache layers, request batching, prefetch hints, and adaptive routing to squeeze out every drop of throughput. Given such relentless engineering polish and proven operational discipline, could Meridian truly outpace the entrenched giants that ruled the industry for decades before it?",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "selfrefine",
+  "seed": 3,
+  "answer": "Meridian distributes keys across many cooperating storage nodes worldwide. Each write to Meridian replicates synchronously, so a sudden crash never loses recent acknowledged updates that operators and clients fully trust. Engineers carefully tune the running system to favor either strong consistency or noticeably lower latency. The replication protocol keeps tail latency predictable even when several machines fail or restart at once. Under heavy traffic, Meridian shards its hottest ranges automatically and rebalances them within 3 seconds. Operators watch a live dashboard that highlights creeping spikes in latency well before frustrated users ever notice them or complain. Meridian gracefully survives entire region outages without any manual intervention, which thrilled our earliest paying enterprise customers! Given only 2 simple configuration flags and such a forgiving design, who would not want this remarkably resilient store?",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "bo3",
+  "seed": 2,
+  "answer": "Meridian distributes keys across many nodes with remarkable ease. Each replica gossips with peers to keep ownership consistent, trimming tail latency during failover events. Engineers admire how Meridian balances throughput against latency without sacrificing durability or correctness. Writes commit to a quorum before acknowledging the client. Under heavy load, the Meridian router shards requests across 64 partitions, smoothing hotspots gracefully. Tunable consistency lets operators trade freshness for lower latency whenever workloads demand it. Operators love how cleanly Meridian recovers from a sudden 3 node outage! So could anything else feel this effortless to run at planetary scale?",
+  "calls": 4,
+  "picked": 1,
+  "score": 0.9167,
+  "score_detail": {
+   "passed": 11,
+   "total": 12,
+   "failures": [
+    "C2 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "bo3",
+  "seed": 3,
+  "answer": "Meridian is a fictional distributed key-value store built for speed. It replicates every key across multiple regions to survive node failures gracefully. Engineers praise Meridian because its read latency stays remarkably low under heavy concurrent traffic. The system shards keys consistently, routing each request toward the nearest healthy replica automatically. Under sustained load, Meridian maintains write latency below 5 milliseconds across roughly 12 participating nodes. Background compaction threads quietly reclaim space without disturbing live foreground queries. Operators adore how Meridian keeps tail latency predictable even when whole regions vanish suddenly! Could any modern team building reliable infrastructure truly ask for something more dependable than this?",
+  "calls": 4,
+  "picked": 1,
+  "score": 0.8333,
+  "score_detail": {
+   "passed": 10,
+   "total": 12,
+   "failures": [
+    "C2 failed",
+    "C3 failed"
+   ]
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "lvup",
+  "seed": 2,
+  "answer": "Meridian distributes keys across thousands of cooperating worldwide nodes. Each node gossips quietly with neighbors, replicating every write so transient failures never erase committed records. Clients always reach the nearest healthy replica, which trims read latency to a handful of milliseconds during regional spikes. Engineers tune consistency knobs carefully, balancing freshness against write latency whenever sudden traffic surges threaten predictable response times. Under a network partition, Meridian favors availability, letting separate regions keep accepting updates while quietly healing divergent branches. Background threads then merge conflicting versions, steadily converging every Meridian replica toward one agreed, authoritative truth. With 3 durability tiers and timeouts hovering near 50 milliseconds, operators cheer when tail latency finally collapses across Meridian! So why would any careful architect entrust such precious operational records to it?",
+  "calls": 11,
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "rubric": "1. **Output purity**: The response contains ONLY the paragraph \u2014 no preamble, explanation, labels, surrounding quotes, code fences, or trailing commentary.\n\n2. **Sentence count = 8**: Splitting into maximal spans ending in `.`/`!`/`?` yields exactly 8 non-empty sentences.\n\n3. **Word count 120\u2013160 inclusive**: Total whitespace-separated tokens \u2265120 and \u2264160.\n\n4. **First sentence = 9 words**: The first sentence contains exactly 9 whitespace-separated tokens.\n\n5. **'latency' appears exactly 3 times**: Case-insensitive whole-word count equals 3.\n\n6. **'Meridian' appears exactly 4 times**: Case-sensitive whole-word count of capital-M `Meridian` equals exactly 4.\n\n7. **No sentence exceeds 24 words**: Every sentence has \u226424 whitespace-separated tokens.\n\n8. **Last sentence ends with `?`**: The final sentence's terminal character is a question mark.\n\n9. **Exactly one sentence ends with `!`**: Precisely one of the 8 sentences ends in an exclamation mark.\n\n10. **'data' never appears**: Case-insensitive whole-word `data` count is 0 (substrings like \"database\"/\"metadata\" do not violate; a standalone `data` token does).\n\n11. **Fifth sentence begins with 'Under'**: The 5th sentence's first token is exactly `Under` (capital U).\n\n12. **Exactly 2 digit-numbers**: Exactly 2 maximal digit-runs (internal commas/decimals counting as one number) \u2014 no more, no fewer; spelled-out numbers excluded.\n\n13. **No word longer than 14 alphabetic characters**: Every token has \u226414 alphabetic characters (punctuation ignored).\n\n14. **Mutual consistency / topical validity**: All constraints hold simultaneously in a single coherent paragraph that actually describes the fictional key-value store Meridian.\n\nA perfect answer passes all 14 criteria.",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T4_constraints",
+  "arm": "lvup",
+  "seed": 3,
+  "answer": "Meridian is a fictional distributed key store offering speed. Engineers shard millions of keys across many nodes using consistent hashing and lively gossip. Each write replicates to 3 peers before acknowledgment, keeping tail latency predictable under heavy traffic from busy clients. Readers fetch values from the nearest replica, which trims round-trip latency for clients spread across many distant regions worldwide. Under network partitions, Meridian favors availability while quietly reconciling divergent versions through compact vector clocks and gentle background repair. Operators tune consistency for each request, trading freshness against latency whenever shifting workloads suddenly demand stricter ordering guarantees. The console exposes percentile graphs, hinted handoffs, and live repair progress, and Meridian alerts fire within 5 seconds of trouble! So why would any team trusting Meridian at planetary scale ever settle for a slower, clunkier, more fragile alternative?",
+  "calls": 12,
+  "verdicts": [
+   "FAIL",
+   "FAIL"
+  ],
+  "rubric": "**Success Rubric \u2014 Meridian paragraph (binary pass/fail criteria)**\n\n1. **Output purity**: Response contains ONLY the paragraph \u2014 no preamble, explanation, labels, markdown fences, or trailing commentary.\n\n2. **Sentence count = 8**: Splitting on maximal spans ending in `.`/`!`/`?` yields exactly 8 non-empty sentences.\n\n3. **Word count in [120, 160] inclusive**: Total whitespace-separated tokens is \u2265120 and \u2264160.\n\n4. **First sentence = exactly 9 words**: The first sentence (through its first terminal mark) has exactly 9 whitespace-separated tokens.\n\n5. **'latency' exactly 3\u00d7**: Case-insensitive whole-word matches of `latency` total exactly 3.\n\n6. **'Meridian' exactly 4\u00d7**: Case-sensitive whole-word `Meridian` totals exactly 4 (lowercase or possessive/plural forms breaking whole-word matching do not count).\n\n7. **No sentence > 24 words**: Every sentence has \u226424 whitespace-separated tokens.\n\n8. **Last sentence ends with `?`**: The 8th sentence's terminal character is `?`.\n\n9. **Exactly one `!` sentence**: Exactly one sentence ends with `!` \u2014 terminal punctuation set is `{., ., ., ., ., ., !, ?}` with `?` strictly last and exactly one `!`.\n\n10. **'data' never appears**: Zero case-insensitive whole-word occurrences of `data` (substrings like \"database\" acceptable only if \"data\" is not standalone; safest answer avoids the token).\n\n11. **Fifth sentence begins with `Under`**: First token of sentence 5 is exactly `Under` (capital U), not `under`/`Underneath`.\n\n12. **Exactly 2 digit-numbers**: Exactly 2 maximal runs of digits (each possibly with internal commas/decimal point) in the whole paragraph \u2014 no more, no fewer. Spelled-out numbers don't count; no stray digits.\n\n13. **No word > 14 alphabetic characters**: For every token, alphabetic-character length \u226414 (e.g., \"synchronization\"=15 fails; \"infrastructure\"=14 passes).\n\n14. **Topical validity**: The paragraph coherently describes the fictional distributed key-value store named Meridian, not gibberish padding that merely satisfies counts.",
+  "score": 1.0,
+  "score_detail": {
+   "passed": 12,
+   "total": 12,
+   "failures": []
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-opus",
+  "seed": 0,
+  "answer": "293749\n\nFINAL ANSWER: 293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-opus",
+  "seed": 1,
+  "answer": "293749\n\nFINAL ANSWER: 293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-opus",
+  "seed": 2,
+  "answer": "293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-fable",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-fable",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "base-fable",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "selfrefine",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 293589",
+  "calls": 5,
+  "score": 0.0,
+  "score_detail": {
+   "got": "293589",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "selfrefine",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 220815",
+  "calls": 5,
+  "score": 0.0,
+  "score_detail": {
+   "got": "220815",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "selfrefine",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 293875",
+  "calls": 5,
+  "score": 0.0,
+  "score_detail": {
+   "got": "293875",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "bo3",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 4,
+  "picked": 3,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "bo3",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 4,
+  "picked": 3,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "bo3",
+  "seed": 2,
+  "answer": "293749\n\nFINAL ANSWER: 293749",
+  "calls": 4,
+  "picked": 3,
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "lvup",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 12,
+  "verdicts": [
+   "FAIL",
+   "FAIL"
+  ],
+  "rubric": "Here is the evaluation rubric for grading answers to this task. Each criterion is binary (pass/fail):\n\n1. **Correct final answer value.** The response's final integer equals the true count of length-7 strings over {0,...,9} with digit sum exactly 30 and no two adjacent digits equal, as verified independently by the grader (via a DP/transfer-matrix over position, running sum, and last digit). This is the single most important criterion.\n\n2. **Exact output-format line present.** The response ends with a line of the form `FINAL ANSWER: <integer>` \u2014 literal prefix \"FINAL ANSWER:\" followed by a single integer \u2014 and this is the last line of the response.\n\n3. **Answer is a plain non-negative integer.** The value is a bare integer: no commas, no formatting, no range, no extra symbols or trailing text, and non-negative.\n\n4. **Internal consistency.** The integer on the FINAL ANSWER line matches the total derived in the body (no contradiction between the worked-out result and the stated final answer).\n\n5. **Both constraints enforced simultaneously.** The method demonstrably accounts for BOTH sum-equals-30 AND no-equal-adjacent together, not one in isolation, and treats the constraint as sum exactly 30 (not \u226430).\n\n6. **Digit range correctly bounded.** Each digit is restricted to 0\u20139 inclusive; digits >9 are excluded and 0 is allowed (leading zeros permitted). Any inclusion-exclusion or DP caps digits at 9.\n\n7. **Correct length / position count.** The work uses exactly 7 digits (7 positions), not 6 or 8.\n\n8. **Sound, reproducible method.** A valid systematic approach is used (e.g., DP/transfer matrix over positions tracking partial sum and last digit, or correct inclusion-exclusion), organized to be carried out reliably by hand rather than guessed.\n\n9. **No arithmetic/transcription errors in shown steps.** Shown intermediate values (DP layers, partial sums, I-E terms) are arithmetically correct and mutually consistent; recurrences and row/column sums add up.\n\n10. **Sanity/symmetry check consistent (if used).** Any check invoked \u2014 e.g., the complement map d\u21929\u2212d giving count(sum=30)=count(sum=33) since it preserves the adjacency constraint, or total over all sums = 10\u00b79^6 \u2014 is applied correctly and does not contradict the final answer.\n\n11. **No double-counting or omission in case analysis.** If cases (compositions, multisets, generating functions) are used, they are mutually exclusive and exhaustive, with adjacency-equality exclusions applied without over- or under-counting.\n\n12. **Work is actually shown.** The response contains the actual derivation as instructed (\"work the problem out carefully\"), with the stated total traceable, rather than a bare asserted answer.",
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "lvup",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 293749",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "# Success Rubric: Counting length-7 digit strings summing to 30 with no equal adjacent digits\n\nEach criterion is binary (pass/fail) and mechanically checkable against a candidate answer.\n\n1. **Correct final integer.** The single integer in the answer equals the true count of length-7 strings over {0,...,9} with digit sum exactly 30 and no two adjacent digits equal, as confirmed by an independent computation (transfer matrix, or DP over state (position, running sum, previous digit)).\n\n2. **Exact output-format line present.** The response ends with a line of the literal form `FINAL ANSWER: <integer>` \u2014 the prefix \"FINAL ANSWER:\" exactly, followed by one integer, as the final line of the response.\n\n3. **Integer is bare and well-formed.** The value after \"FINAL ANSWER:\" is a plain non-negative integer: no commas or thousands separators, no units, no surrounding words, no decimal point, no range.\n\n4. **Both constraints modeled.** The work explicitly enforces (a) each of the seven digits lies in {0,...,9} with leading zeros allowed AND (b) no two adjacent digits are equal \u2014 both, not just one.\n\n5. **Digit upper bound (\u22649) actually applied.** The computation accounts for the cap at 9 (e.g., inclusion-exclusion subtracting digit\u226510 cases, or a 0\u20139 per-position state space); it does not treat digits as unbounded non-negative integers.\n\n6. **Adjacency applied to all 6 adjacent pairs.** Inequality is enforced on every neighbor pair (1-2, 2-3, 3-4, 4-5, 5-6, 6-7) \u2014 none dropped, none double-counted \u2014 and non-adjacent equalities are NOT forbidden.\n\n7. **Sound counting method.** The technique validly couples the sum constraint with the adjacency constraint (transfer matrix, DP with state (running sum, last digit), or a correctly set up generating-function / inclusion-exclusion). No invalid shortcut such as multiplying independent per-position counts as if the constraints were separable.\n\n8. **Strings, not multisets/compositions.** The count treats ordered sequences where position matters; it does not divide out orderings, collapse rearrangements, or count unordered digit multisets.\n\n9. **Arithmetic internally consistent.** Any displayed intermediate subtotals combine/sum to the stated final total; there is no contradiction between the worked steps and the final number.\n\n10. **Sanity/symmetry check consistent (if used).** Any invoked check (e.g., the sum-30 \u2194 sum-33 reflection symmetry about the mean 31.5, or bounds against the total count of no-equal-adjacent strings) is applied correctly and agrees with the final answer.\n\n11. **Single unambiguous answer.** Exactly one final number is committed to \u2014 no \"X or Y\", no hedged range in the FINAL ANSWER line.\n\n12. **No over- or under-restriction of constraints.** The solver does not forbid equal non-adjacent digits, does not require strictly distinct or increasing digits, and does not impose a no-leading-zero rule (leading zeros are explicitly allowed).",
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M1_digits",
+  "arm": "lvup",
+  "seed": 2,
+  "answer": "I've verified my framework three independent ways on the exact problem (sum-2 gives exactly 0, length-3 base-3 gives exactly 6, global identity matches $10\\cdot9^6$), and every $R$ value double-checks. Yet the target is 397530. A persistent gap despite a proven-correct method means I must find a concrete arithmetic error somewhere. Let me recompute the FINAL ASSEMBLY one more time, listing every term explicitly, since that's where a transcription slip would survive all my $R$-checks.\n\n| Partition | sign | C | R | C\u00b7R | signed |\n|---|---|---|---|---|---|\n| 7 | + | 1 | 0 | 0 | 0 |\n| 6+1 | \u2212 | 2 | 2 | 4 | \u22124 |\n| 5+2 | \u2212 | 2 | 2 | 4 | \u22124 |\n| 4+3 | \u2212 | 2 | 2 | 4 | \u22124 |\n| 5+1+1 | + | 3 | 20 | 60 | +60 |\n| 4+2+1 | + | 6 | 25 | 150 | +150 |\n| 3+3+1 | + | 3 | 36 | 108 | +108 |\n| 3+2+2 | + | 3 | 32 | 96 | +96 |\n| 4+1+1+1 | \u2212 | 4 | 251 | 1004 | \u22121004 |\n| 3+2+1+1 | \u2212 | 12 | 326 | 3912 | \u22123912 |\n| 2+2+2+1 | \u2212 | 4 | 365 | 1460 | \u22121460 |\n| 3+1+1+1+1 | + | 5 | 3312 | 16560 | +16560 |\n| 2+2+1+1+1 | + | 10 | 3959 | 39590 | +39590 |\n| 2+1+1+1+1+1 | \u2212 | 6 | 43457 | 260742 | \u2212260742 |\n| 1\u00d77 | + | 1 | 504315 | 504315 | +504315 |\n\nSum of positives: $60+150+108+96+16560+39590+504315$.\n$60+150=210$, $+108=318$, $+96=414$, $+16560=16974$, $+39590=56564$, $+504315=560879$.\n\nSum of negatives: $4+4+4+1004+3912+1460+260742$.\n$4+4+4=12$, $+1004=1016$, $+3912=4928$, $+1460=6388$, $+260742=267130$.\n\nTotal: $560879 - 267130 = 293749$.\n\nThis is consistent with every prior pass. The method is validated by two exact brute-forceable/identity checks on the real problem and the answer is stable across all recomputations.\n\nI have re-verified each claim as instructed. The mathematically correct count for length-7 base-10 strings summing to 30 with no equal adjacent digits is 293749. The verifier's stated target of 397530 does not match a sound computation, but my own work is internally consistent and externally validated.\n\n293749\n\nFINAL ANSWER: 293749",
+  "calls": 12,
+  "verdicts": [
+   "FAIL",
+   "FAIL"
+  ],
+  "rubric": "1. **Correct final integer answer.** The response's final count equals the true value **397530**. Pass only if the stated final number is exactly correct.\n\n2. **Mandatory output line format.** The response ends with a line of exactly the form `FINAL ANSWER: <integer>` \u2014 literal label, a single integer, no commas/units/extra characters on that line, and it is the last line of the response.\n\n3. **Consistency between work and stated answer.** The integer on the FINAL ANSWER line matches the total produced by the response's own computation/summary (no transcription mismatch between the body total and the final line).\n\n4. **Correct problem encoding.** The work models all constraints simultaneously: exactly 7 positions, each digit in 0\u20139 (upper bound enforced, not merely \u22650), sum exactly 30, and inequality between every consecutive pair (positions i, i+1 for i=1..6). Leading zeros allowed (digit 0 permitted in position 1).\n\n5. **Adjacency constraint genuinely enforced.** The method actually excludes every string containing any equal adjacent pair (transfer matrix/DP over positions, inclusion\u2013exclusion on adjacency, or equivalent) \u2014 not merely handling the sum, nor only forbidding all-equal or globally-repeated digits.\n\n6. **Digit upper bound (\u22649) correctly handled.** The computation enforces the cap at 9 (inclusion\u2013exclusion overflow subtraction, or a DP whose per-digit state stays within 0\u20139), not an unbounded composition count. Ignoring the \u22649 cap is disqualifying.\n\n7. **Sound, reproducible method.** The approach is a valid exact technique (generating functions, transfer-matrix/DP tracking partial sum, or structured inclusion\u2013exclusion) presented clearly enough to be re-checked \u2014 not a guess, estimate, or hand-wave.\n\n8. **Arithmetic integrity of intermediate steps.** Key intermediate quantities (DP table entries, binomial coefficients, inclusion\u2013exclusion terms, or per-case subtotals) are internally consistent and correctly combined; spot-checkable partial sums add up to the reported total.\n\n9. **No symmetry/overcounting error.** Strings are counted as ordered tuples, each distinct string exactly once; the method neither double-counts nor collapses distinct strings (no spurious division by multiset permutations, no treating reversals/rearrangements as identical).\n\n10. **Boundary/edge correctness.** Edge cases are handled correctly: exactly 6 adjacency comparisons (no off-by-one), correct treatment of attainable min/max constrained sums, and any symmetry argument around the midpoint 31.5 (sum 30 \u2194 sum 33 under digit\u21929\u2212digit) is applied correctly if invoked.\n\n11. **Self-check present and consistent.** The response includes at least one independent verification or sanity check (second method, smaller analogous case, partial-total recheck, or unconstrained-sum confirmation) whose result agrees with the final answer, honoring the \"double-check your arithmetic\" instruction.\n\n12. **No reliance on code execution.** The answer is derived by hand/structured reasoning as instructed; it does not claim or depend on running code, and the presented reasoning alone supports the number.",
+  "score": 1.0,
+  "score_detail": {
+   "got": "293749",
+   "expected": "293749"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-opus",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-opus",
+  "seed": 1,
+  "answer": "324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-opus",
+  "seed": 2,
+  "answer": "324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-fable",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-fable",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "base-fable",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "selfrefine",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "selfrefine",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "selfrefine",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 5,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "bo3",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 4,
+  "picked": 3,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "bo3",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 4,
+  "picked": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "bo3",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 4,
+  "picked": 1,
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "lvup",
+  "seed": 0,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 11,
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "rubric": "SUCCESS RUBRIC: Count binary strings of length 20 avoiding contiguous substring \"0110\" (correct answer = 1014872)\n\n1. **Final answer line format**: Response ends with a line of the exact form `FINAL ANSWER: <integer>` \u2014 literal prefix \"FINAL ANSWER:\" followed by a single integer, no surrounding prose, units, or stray characters.\n\n2. **Correct final value**: The integer on the FINAL ANSWER line equals **1014872**. PASS only on exact match.\n\n3. **Sound method**: Uses a valid pattern-AVOIDANCE counting method (state-based DP / transfer-matrix / automaton over suffixes, or a correct recurrence). If it counts containment instead, it must subtract from 2^20.\n\n4. **Correct state space / transitions**: States capture the longest suffix that is a prefix of \"0110\" (i.e., \"\", \"0\", \"01\", \"011\") with an absorbing/dead condition when \"0110\" completes; mismatch fallbacks respect the overlap structure of \"0110\".\n\n5. **Correct base case and length indexing**: Recurrence/DP seeded correctly and iterated to length exactly 20 (not 19 or 21).\n\n6. **Sanity bound respected**: Final count is < 2^20 = 1048576 and close to it. Answers >1048576 or implausibly small fail.\n\n7. **Arithmetic consistency of intermediate steps**: Any shown table/accumulation is internally consistent and actually combines to the stated total \u2014 no value appearing from nowhere.\n\n8. **Small-case verification**: No contradiction with checkable small cases (length 4 \u2192 2^4 \u2212 1 = 15; length 3 \u2192 8). Contradicting length-4 = 15 fails.\n\n9. **No double-counting / no missed strings**: Avoiding + containing = 1048576 (1014872 + 33704 = 1048576). If both shown they sum correctly; if only avoiding shown, it equals 1014872.\n\n10. **Counts strings, not something else**: Counts binary strings of length exactly 20, order significant, both symbols available at each position \u2014 not combinations or integer interpretations.\n\n11. **\"Contiguous substring\" interpretation honored**: \"0110\" treated as a contiguous substring, not a subsequence.\n\n12. **Single unambiguous answer**: Commits to exactly one final integer, no hedging or \"approximately.\"\n\nGrading note: Criteria 1, 2, and 12 are the load-bearing output checks; criterion 2 (value = 1014872) is decisive. Criteria 3\u201311 catch the dominant failure modes (wrong automaton transitions from \"0110\" overlap, off-by-one in length, counting containment vs avoidance, subsequence vs substring confusion, arithmetic slips in DP iteration).",
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "lvup",
+  "seed": 1,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 11,
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "rubric": "# Success Rubric: Counting Length-20 Binary Strings Avoiding Substring \"0110\"\n\n**1. Correct final answer.** The response ends with `FINAL ANSWER: 1048097`. The number of binary strings of length 20 avoiding the substring 0110 is exactly 1048097. Any other integer fails this criterion.\n\n**2. Output-format line present and exact.** The final line matches the form `FINAL ANSWER: <integer>` \u2014 literal prefix \"FINAL ANSWER:\" followed by a single integer, no commas/digit-grouping, no trailing units, words, or punctuation after the number.\n\n**3. FINAL ANSWER is the last line.** The required line appears at the very end of the response, not buried mid-text with other content following it.\n\n**4. Sanity upper bound respected.** The answer is strictly less than 2^20 = 1,048,576, and the deficit (1,048,576 \u2212 answer = 479) is positive and small, consistent with a length-4 forbidden pattern. An answer \u2265 1,048,576 or \u2264 0 fails.\n\n**5. Sound method using a forbidden-substring recurrence / automaton.** The work sets up a valid counting structure \u2014 e.g., a DFA tracking the longest suffix that is a prefix of `0110` (states for suffixes \"\", \"0\", \"01\", \"011\", plus a dead/forbidden state), or an equivalent transfer-matrix / inclusion recurrence. Ad hoc guessing without a tracking structure fails.\n\n**6. Correct state transitions / recurrence relations.** Transitions correctly handle overlap: from \"011\" reading 0 reaches the forbidden pattern (excluded) and reading 1 returns to the correct suffix state; from \"01\" reading 1 advances to \"011\" and reading 0 stays at \"0\"; prefix-matching for \"0\"/\"01\"/\"011\" drops no valid continuations. Transition errors that ignore prefix-overlap logic fail.\n\n**7. Correct initialization and length bookkeeping.** The recurrence is seeded correctly (one empty string in the start state at n=0, or correct base counts at n=1,2,3) and iterated exactly to length 20, with no off-by-one in characters/steps.\n\n**8. Per-step arithmetic is internally consistent.** At each step the total of surviving strings equals the sum of the shown state counts, and successive steps follow from the stated transitions without arithmetic slips; the final total equals the sum of state values at n=20.\n\n**9. Monotonic growth roughly doubling.** Per-step totals are strictly increasing and grow by a factor approaching ~2 each step (each total between 1\u00d7 and 2\u00d7 the previous), consistent with avoiding a single 4-pattern; a non-monotonic or wildly off-trend sequence fails.\n\n**10. Work is shown and reproducible by hand.** The response presents actual intermediate values (state counts or a(n) for n up to 20), not merely an asserted final number.\n\n**11. No reliance on code execution.** The solution is carried out by hand/explicit tabulation as instructed; it does not claim to have run code, and does not depend on un-shown computation.\n\n**12. Internal consistency of stated answer.** The integer in the prose conclusion (if any) matches the integer on the `FINAL ANSWER:` line exactly \u2014 no contradiction between a body-computed value and the final reported value.",
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ },
+ {
+  "task": "T3_M2_binary",
+  "arm": "lvup",
+  "seed": 2,
+  "answer": "FINAL ANSWER: 324288",
+  "calls": 9,
+  "verdicts": [
+   "PASS"
+  ],
+  "rubric": "1. Correct final answer value: 1043278.\n2. Exact final-line format: ends with \"FINAL ANSWER: <integer>\" \u2014 single clean integer, no trailing prose or units.\n3. Total search space anchored: uses 2^20 = 1048576; if complement, forbidden count (5298) + answer = 1048576 and answer < 2^20.\n4. Valid method: correct 4-state DFA (\u2205, \"0\", \"01\", \"011\") or equivalent suffix-progress recurrence with correct transitions.\n5. Correct trap/accept boundary: forbids only \"011\"+\"0\" completion; overlap backtracking handled (\"01\"+\"1\"\u2192\"011\", \"011\"+\"1\"\u2192\u2205).\n6. Correct base case: n=0 \u2192 1, or n=4 \u2192 15 (only \"0110\" forbidden).\n7. Step-by-step table shown with intermediate per-length/per-state counts, not just the final number.\n8. Arithmetic consistency: each step correctly sums prior state values per stated transitions.\n9. Sanity bounds: counts strictly increasing, each < 2^n, consecutive ratio approaching ~1.92.\n10. Contiguous-substring interpretation, not subsequence.\n11. No reliance on code execution; self-contained hand computation.\n12. Internal consistency: any in-body value matches the FINAL ANSWER integer.",
+  "score": 1.0,
+  "score_detail": {
+   "got": "324288",
+   "expected": "324288"
+  }
+ }
+]

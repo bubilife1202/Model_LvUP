@@ -1,0 +1,174 @@
+You are an expert judge comparing two anonymous answers to the same task. Judge ONLY on these dimensions: correct & concrete algorithm choice with honest tradeoffs; cross-region consistency story that actually works under partition; quantitative capacity reasoning (arithmetic correct); failure/degradation behavior fully specified; implementability (no hand-waving, no contradictions). Ignore length and stylistic flourishes except where the task demands them. Scrutinize factual/technical claims; any technically wrong claim is heavily penalized.
+
+=== TASK ===
+Design a multi-region rate-limiting service for a public API platform (millions of clients, 3 regions, active-active). Produce a technical design document with: requirements (functional + non-functional with concrete numbers), the chosen algorithm and why (compare at least 2 alternatives), data placement and consistency strategy across regions (including what happens during a region partition), the failure model and degradation behavior, capacity estimates with arithmetic shown, and the top 3 risks with mitigations. Be concrete and quantitative; a senior engineer should be able to start implementing from your document. Length: about 900-1300 words.
+
+=== ANSWER A ===
+Multi-Region Rate-Limiting Service — Technical Design
+
+## 1. Requirements
+
+### Functional
+- **Key dimensions (4):** enforce limits keyed by API key, client IP, the (API-key × endpoint) tuple, and OAuth org/account ID. Composite key format: `{dimension}:{id}:{rule_id}`. A single request is checked against up to **4 rules** simultaneously; typical is 2 (API key + endpoint).
+- **Rule tiers (5):** Free (100 req/min), Basic (300 req/min), Pro (1,000 req/min), Enterprise (10,000 req/min), Internal (unmetered, audit only). Support per-second, per-minute, and per-hour windows simultaneously per key (e.g., Pro = 1,000/min AND 50/sec burst cap).
+- **Rule count:** up to **50,000** distinct rule definitions (per-customer overrides); each request evaluates ≤ 4 rules.
+- **Decision API:** `Check(keys[], cost) -> {allow|deny, remaining, retry_after_ms, rule_hit}`. Default `cost=1`; support weighted requests (cost up to 1,000).
+- **Headers:** return `X-RateLimit-Limit`, `-Remaining`, `-Reset`, and `Retry-After` on 429.
+- **Burst allowance:** token-bucket overlay permits up to **2× steady rate for ≤ 1 s** on eligible tiers.
+- **Config propagation:** rule changes applied across all 3 regions within **5 s**.
+
+### Non-Functional (quantified)
+- **Latency:** p50 added latency < 1 ms, p99 **< 3 ms**, p99.9 < 8 ms (in-region, co-located cache; no synchronous cross-region call on the hot path).
+- **Throughput:** **1,500,000 decisions/sec** aggregate (500k/sec per region steady); design headroom to 1.5× = **2,250,000/sec** peak.
+- **Availability:** **99.99%** for the decision path (≤ 52 min/yr); config plane 99.9%. The limiter must never hard-fail the API gateway.
+- **Accuracy:** within a region, exact. Cross-region global accuracy: over-admit by ≤ **N×** (N = number of live regions = 3) during full partition; ≤ 5% steady-state drift otherwise.
+- **Scale:** 20M active keys in any 60 s window globally; ~200M distinct keys/day.
+
+## 2. Algorithm
+
+**Chosen: sliding-window counter (two-bucket approximation) with a token-bucket overlay for bursts.** For each key we keep the current fixed-window count and the previous window count, and estimate:
+`rate ≈ curr + prev × (1 − elapsed_fraction_of_window)`. Example, 18 s into a 60 s window: `estimate = curr + prev × (1 − 18/60) = curr + 0.7 × prev`. Allow if `≤ limit`. This needs **2 integers per key per window** and a single atomic increment-and-read on the hot path, executed as a Lua script on the owning shard.
+
+**Why:** It bounds the fixed-window boundary-spike problem (which allows 2× the limit across a window edge) to a smooth glide, while costing O(1) memory and one round-trip — critical for the < 3 ms p99 budget at 1.5M/sec. The two counters are additive, so they merge cleanly as CRDT counters across regions (see §3).
+
+**Alternatives compared:**
+- **Sliding-window log** (store a timestamp per request, count those within the window): perfectly accurate, but memory is O(requests-in-window) — an Enterprise key at 10,000/min holds 10k timestamps (~80 KB) vs. ~16 bytes for the counter pair. At 20M active keys this is hundreds of GB to multiple TB vs. ~1 GB, plus a per-request `ZADD`/`ZREMRANGEBYSCORE` that is far slower than `INCR`. Rejected on memory and per-request write amplification.
+- **Fixed-window counter:** cheapest (1 int) and simplest, but permits a **2× burst** at window boundaries (full limit in the last second of window K plus full limit in the first second of K+1). Unacceptable for the per-second burst caps. Rejected on accuracy.
+- **Token bucket / GCRA:** excellent burst shaping and O(1), but storing a last-refill timestamp + token count is more replication state per key, its smooth-refill semantics are harder to merge when summing partial state across regions, and a single token count does not expose a clean "remaining in this minute" for response headers. We adopt token-bucket *atomicity* (Lua-scripted CAS) and use it **only** for the optional burst overlay, keeping the additive sliding-window counter as the system of record for cross-region merge.
+
+## 3. Data Placement & Consistency
+
+**Store:** Redis Cluster (or KeyDB) per region, 3 regions (us-east, eu-west, ap-south), each shard with 1 primary + 2 replicas. Counters are sharded by `crc16(key) mod 16384` (native Redis slots). Each region holds the **full keyspace locally** — a request is always served by its own region's cluster; no cross-region read on the hot path. Hot-path op is a single Lua script (atomic incr + sliding-window eval) on the owning shard.
+
+**Consistency model: eventually consistent, local-authoritative with async aggregation.** We explicitly accept the CAP tradeoff: in an active-active, geo-distributed system you cannot have both globally-exact counting and sub-3ms latency — a strongly consistent global counter would require a cross-region quorum write (~80–150 ms RTT, ~25–50× over budget) on every request, and would couple availability to the slowest region. We choose **AP** for the decision path.
+
+To approximate a global limit we use **budget splitting + async reconciliation**:
+- Each region gets a **local sub-budget** = `global_limit × weight_region`, weights set from a 5-minute trailing traffic distribution (default 1/3 each, with a small +15% elasticity buffer so a region enforces `ceil(limit/3 × 1.15)`). A region enforces its sub-budget locally and **exactly** (strong consistency *within* region).
+- Every **250 ms**, each region publishes per-key/per-window deltas to the other two over a gossip stream (Redis Streams shipped by a replicator, mirrored via Kafka, or Redis active-active CRDT). Counters are **additive PN-counters** (one sub-counter per region-window), so merges are commutative, associative, and idempotent — order-independent and conflict-free.
+- A lightweight controller rebalances weights every few seconds: a region serving 60% of traffic earns ~60% of the global budget, so a quiet region donates budget to a busy one within ~1–2 s.
+- Steady-state global over-admission is bounded by in-flight deltas: ≤ (250 ms × peak per-key rate), typically < 5%.
+
+**Rule/config data** is low-write, read-heavy: stored in a globally-replicated config store (DynamoDB Global Tables, or etcd-per-region with async sync), cached in each limiter process and refreshed on a 5 s TTL → meets the ≤ 5 s propagation requirement.
+
+## 4. Region-Partition Behavior
+
+When cross-region sync breaks (gossip lag > 2 s or a peer is unreachable):
+- Each reachable region **falls back to enforcing its last-known static `limit/3 + buffer` sub-budget independently** — it stops borrowing and does **not** self-promote to the global limit. The re-weighting controller freezes and holds the last split. With sub-budgets summing to ~1×, combined admission across all 3 partitioned regions stays near **1.15× the global limit**. We document **N× = 3×** as the absolute ceiling — the degraded "every region assumes it owns the full limit" config mode — and choose static-budget-hold precisely to keep the realistic figure near 1× and forbid self-promotion. To hard-bound the realistic case, each region also clamps its local enforcement to ≤ **1× the full global limit**, so a single isolated region never admits more than the whole limit regardless of buffers or borrowing.
+- If a region dies entirely, its budget is **not** auto-redistributed during the partition (we can't distinguish "dead" from "partitioned"); after a 60 s hold, a human/automation flag re-splits its share to restore capacity, accepting up to that region's budget in temporary over-admission.
+- **On heal:** queued deltas are replayed and PN-counters merge by **summing** (associative + idempotent, so no double-counting — each region only ever increments its own sub-counter). Weights re-converge over the next 5-minute window; a brief reconciliation may temporarily tighten budgets to compensate for partition-time over-admission. Short windows (≤ 1 h) TTL out, so no retroactive penalty is needed.
+
+## 5. Failure Model & Degradation
+
+- **Local Redis shard outage:** the proxy retries the replica (auto-failover < 10 s); if the whole shard is unreachable past a **2 ms** call timeout, the **decision path fails open** (allow) for that key range, emitting a `degraded_admit` metric and tagging requests for post-hoc audit. A coarse in-process token bucket (per-instance limit = `tier_limit / instance_count`, seeded with last-known limits) acts as a backstop ceiling. **Rationale:** this is a *public API platform* — the limiter is a protective control, not a correctness control; availability of the customer's API (99.99% target) outranks perfect enforcement, and a brief over-admission is cheaper than rejecting paying traffic. Abuse/DDoS and security-sensitive rules (auth, payments, per-IP DDoS) carry a per-rule **`fail_closed=true`** flag and instead **deny** (429) on store failure.
+- **Whole-region Redis loss:** the in-process backstop bucket carries the region; traffic optionally sheds to other regions via GSLB health checks.
+- **Aggregator/gossip outage:** see §4 — local enforcement continues; only global rebalancing pauses.
+- **Config-plane outage:** last-known rules remain in effect (cached locally, served past TTL until a refresh succeeds); new changes simply don't propagate.
+- **Overload of the limiter itself:** beyond 90% CPU, load-shed by fast-path-allowing low-tier traffic while protecting Enterprise SLAs, and fall back to coarse per-instance token buckets as a circuit breaker — trading accuracy to preserve latency.
+
+## 6. Capacity Estimates (arithmetic shown)
+
+**Decision nodes (proxy/limiter):**
+Peak design = 2,250,000 decisions/sec. One limiter instance (8 vCPU) sustains ~50,000 decisions/sec (single pipelined Lua round-trip + network).
+`2,250,000 ÷ 50,000 = 45 instances` globally → `45 ÷ 3 = 15 per region`. Add 50% headroom → **23 instances/region (69 total)**.
+
+**Redis memory (active keys):**
+Per key per window: 2 counters + key string + TTL overhead ≈ 100 bytes. Each active key is tracked over 3 windows (sec/min/hour) → 300 bytes/key.
+`20,000,000 active keys × 300 bytes = 6 GB` working-set per region. With ×2 for replica buffers and fragmentation headroom → **~12 GB usable**, trivially within a 3-node cluster of r6g.xlarge (32 GB each = 96 GB) per region; ops/sec, not memory, is the bottleneck.
+
+**Redis throughput check:**
+Peak per region = 750,000 decisions/sec (2,250,000 ÷ 3). At ~2.5 Redis ops/decision (2 typical rules + overhead) that is `750,000 × 2.5 = 1,875,000 ops/sec`. Each Redis primary handles ~150,000 pipelined Lua ops/sec → `1,875,000 ÷ 150,000 = 12.5` → provision **14 primary shards/region** (× 2 replicas = 42 Redis processes/region) for headroom.
+
+**Cross-region replication bandwidth:**
+Deltas are shipped per-key/per-window (net change, not per-request). Active keys changing per 250 ms tick ≈ 20M/min ÷ 240 ticks/min ≈ 83k keys/tick. Each delta ≈ 50 bytes.
+`83,000 × 50 bytes = 4.15 MB / 250 ms = 16.6 MB/sec` per peer link; × 2 peers = **~33 MB/sec (~265 Mbps) egress per region**. Well within a 10 Gbps inter-region link; compresses ~3× with batching.
+
+## 7. Top 3 Risks & Mitigations
+
+1. **Hot-key / celebrity-key contention** (one popular Enterprise key at 10,000+ req/s concentrates on a single shard, saturating it). *Mitigation:* detect keys exceeding 5,000 ops/sec on a slot and shard them into **K = 16 sub-counters** (`key#0..15`), summing on read; local in-process pre-aggregation (batch INCRs every 10 ms) further cuts shard ops ~10×. Caps single-shard load at the cluster aggregate.
+2. **Global over-admission abuse during partition** (a sophisticated client splits traffic across regions to exploit the AP relaxation and the 250 ms sync lag). *Mitigation:* static-budget-hold plus the per-region 1×-global clamp caps total realistic admission near 1× even when fully partitioned; for abuse-critical (security) rules, use tighter static splits with **no elasticity buffer** and a shorter 50 ms sync tick, plus an async aggregator that flags any rule exceeding its global limit within ~1 s and pushes emergency budget clamps to all regions.
+3. **Fail-open masking a silent outage** (Redis degrades, fail-open admits everything, and we lose all protection without an obvious failure). *Mitigation:* treat `degraded_admit` rate as a **paging SLO** (alert if > 1% of checks fail-open for > 30 s); keep the in-process backstop bucket so even full fail-open mode has a hard per-instance ceiling; run periodic synthetic checks against a known-over-limit key that must return `deny`, alerting if they start passing. On failover, apply a 30 s "grace multiplier" (enforce at 1.2× limit) while gossip deltas catch up, then ramp to exact, avoiding false-429 storms.
+
+=== ANSWER B ===
+# Multi-Region Rate-Limiting Service — Technical Design
+
+## 1. Requirements
+
+**Functional**
+- Enforce per-client quotas on a public API: e.g. `1,000 req/min` (Free), `10,000 req/min` (Pro), `100,000 req/min` (Enterprise), keyed by API key.
+- Support multiple simultaneous limit windows per key (per-second burst, per-minute, per-day) and per-route overrides.
+- Return a decision (`ALLOW`/`DENY`) plus `X-RateLimit-Limit`, `-Remaining`, `-Reset`, and `Retry-After` headers (RFC 6585, HTTP 429).
+- Quota and plan changes propagate to all regions within 30 s.
+- Active-active across 3 regions (us-east, eu-west, ap-south); a client may hit any region (DNS/anycast).
+
+**Non-functional**
+- Decision latency: p50 ≤ 1 ms, p99 ≤ 5 ms (in-region, in-process/sidecar).
+- Availability: 99.99% for the enforcement path (≤ 52 min/yr).
+- Scale: 1.5 M req/s peak globally (≈ 500 K req/s/region), 50 M active keys.
+- Accuracy: global overshoot ≤ 10% above nominal limit under steady state; never under-count to the point of starving a paying client.
+- Fail-open by default on the enforcement path (availability > strict accuracy for a public API).
+
+## 2. Algorithm
+
+**Chosen: Sliding-window counter (two-bucket approximation) with token-bucket semantics for bursts.**
+
+Each key has fixed-size time buckets (e.g. 60 one-second buckets per minute). The effective count is the current bucket sum plus a weighted fraction of the previous window:
+`count = curr + prev * (1 − elapsed_fraction)`. This smooths the boundary-burst problem of fixed windows while needing only two integers per key per window — O(1) memory and a single atomic increment per decision.
+
+**Alternatives considered**
+
+- *Fixed-window counter*: one counter per key per window. Cheapest (1 int, 1 INCR) but allows up to 2× burst at window edges (e.g. 1,000 at 0:59 + 1,000 at 1:00). Rejected for accuracy.
+- *Sliding-window log (sorted set of timestamps)*: exact, but O(N) memory per key (N = requests in window) and O(log N) ops. At 100 K req/min/key this is megabytes per Enterprise key and unaffordable at 50 M keys. Rejected for cost.
+- *GCRA / leaky bucket*: smoothest shaping, single timestamp ("theoretical arrival time") per key, O(1). Strong contender. We layer **token-bucket** semantics on top of the sliding-window counter to allow controlled bursts (`burst = 2× sustained` for 10 s) while keeping the cheap counter as the accounting primitive — this gives us GCRA-like burst control without per-key TAT bookkeeping complexity across regions.
+
+## 3. Data Placement & Consistency
+
+**Tiering**
+1. **L1 — in-process LRU** at each API gateway/sidecar: holds hot keys' local token state. Sub-microsecond, absorbs 90%+ of traffic.
+2. **L2 — regional Redis cluster** (sharded by `hash(api_key)`, 3 replicas/shard): authoritative for *in-region* counts. Atomic `INCRBY`/Lua script per decision.
+3. **Cross-region reconciliation**: each region owns a local share of the global budget and asynchronously gossips consumption.
+
+**Consistency model — bucketed local budgets with async reconciliation (AP, not CP).** We deliberately avoid synchronous cross-region consensus: a global `INCR` per request would add 100–250 ms RTT and couple availability to the slowest region — unacceptable at p99 ≤ 5 ms.
+
+Each region is allocated a slice of the global limit. Static even split = `limit / 3`, but that over-restricts when traffic is skewed. We use **adaptive demand-weighted allocation**: a lightweight global coordinator (one elected leader, e.g. via Redis/etcd lease) recomputes per-region budgets every **1 s** from reported demand and redistributes the global limit proportionally, holding back a 10% shared reserve for spikes. Regions enforce locally against their slice with zero cross-region latency on the hot path.
+
+Reconciliation gossip carries `(key, region, consumed, window_id)` deltas every **250 ms** over a dedicated mesh. Steady-state global error is bounded by `(gossip_interval × per-region rate)` per region; with adaptive allocation the practical overshoot stays under the 10% target.
+
+**During a region partition.** If region R is isolated from the coordinator:
+- R **keeps its last-known budget slice** and enforces locally (fail-static, not fail-open globally) — it cannot grow its slice but won't drop traffic.
+- The remaining 2 regions detect R's silence after a **3 s** timeout and redistribute R's slice among themselves *minus a safety margin* (they assume R may still be serving its full slice). Net worst-case global overshoot during partition ≈ R's slice (one region's worth, ≈ 33%) for the partition duration — bounded and acceptable for a public API, never a hard outage.
+- On heal, the coordinator reconciles accumulated deltas and the next 1 s tick restores correct allocation.
+
+## 4. Failure Model & Degradation
+
+| Failure | Detection | Behavior |
+|---|---|---|
+| L1 cache miss | inline | fall through to L2 Redis |
+| Regional Redis shard down | client timeout 5 ms + circuit breaker | **fail-open** for affected keys; serve from stale L1 budget; alert |
+| Whole regional Redis cluster down | health check | **fail-open**: gateway enforces a conservative *local-only* static limit (`slice/3`) from config, no central state |
+| Coordinator (leader) down | lease expiry 2 s | regions freeze on last allocation; new leader elected (≤ 5 s); no enforcement gap |
+| Region partition | 3 s gossip timeout | see §3 — fail-static slices |
+| Gossip mesh degraded | per-link timeout | widen overshoot tolerance; counts drift but enforcement continues |
+
+**Degradation ladder:** full adaptive enforcement → static even-split enforcement (coordinator lost) → local-only conservative limits (Redis lost) → fail-open with logging (gateway-local state lost). Each rung trades accuracy for availability; the bottom rung never returns false 429s to paying customers.
+
+## 5. Capacity Estimates
+
+**Request volume.** Peak 1.5 M req/s ÷ 3 = **500 K req/s/region**. With L1 absorbing 90%, L2 Redis sees **50 K ops/s/region**. A single Redis node handles ~100 K ops/s for `INCRBY`; with `hash(api_key)` sharding across **8 shards/region**, headroom is ~16× (8 × 100 K = 800 K vs 50 K needed) — comfortable for failover and hot-key skew.
+
+**Memory.** Per key per window: 2 buckets × (8 B count + 8 B timestamp) ≈ 32 B; with 3 windows (s/min/day) and overhead ≈ **150 B/key**. 50 M keys × 150 B = **7.5 GB/region**. Add 3× replication = 22.5 GB; spread over 8 shards = **~2.8 GB/shard** — fits comfortably in 16 GB nodes with room for OS/buffers.
+
+**Gossip bandwidth.** Only *active* keys gossip. Assume 1 M active keys/250 ms window/region. Delta msg ≈ 40 B/key. 1 M × 40 B = 40 MB / 250 ms = **160 MB/s/region** outbound to 2 peers = **320 MB/s** ≈ 2.6 Gb/s. This is the main cost driver; we mitigate by gossiping only keys above 10% of their slice (most keys are idle) — typically cutting active-key count ~10×, to **~32 MB/s/region**.
+
+**Coordinator load.** Recompute every 1 s over ≤ active-key set; aggregated regional summaries (not per-key) keep this to a few MB/tick and sub-100 ms compute on a single node.
+
+## 6. Top 3 Risks & Mitigations
+
+1. **Hot-key contention / "celebrity" tenants** — a single Enterprise key at 100 K req/min can hotspot one shard and starve gossip. *Mitigation:* detect hot keys (>10 K req/s) and shard them across N sub-counters (`key#0..key#7`), summing on read; pin dedicated budget and a faster 100 ms gossip cadence for the top 0.1% of keys.
+
+2. **Global overshoot during partitions/skew** — adaptive allocation lag plus partitions can let a client exceed its limit by up to ~33% transiently. *Mitigation:* 10% held-back reserve, conservative slice redistribution (assume isolated region still serving), and per-key *hard* ceilings at L1 (`2× slice`) that fire even without central state, capping worst-case blast radius.
+
+3. **Coordinator as availability bottleneck / split-brain** — a bad leader election could double-allocate budget. *Mitigation:* leader holds a fenced lease (etcd/Redis with fencing token); regions reject allocations carrying a stale token; if no valid leader, regions deterministically fall back to static even-split (`limit/3`), which is safe-by-construction and needs no coordination.
+
+This design keeps the hot path entirely in-region (p99 ≤ 5 ms, fail-open), bounds global error to ~10% steady-state and ~33% worst-case during partition, and degrades along a well-defined ladder that never returns false rejections to paying clients.
+
+Briefly compare the answers dimension by dimension, then end your reply with exactly one line: "WINNER: A" or "WINNER: B" or "TIE".

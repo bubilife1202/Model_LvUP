@@ -1,0 +1,162 @@
+[
+ {
+  "id": "cmp00",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp00",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp01",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp01",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp02",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp02",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp03",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp03",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp04",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp04",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp05",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp05",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp06",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp06",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp07",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp07",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp08",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp08",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp09",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp09",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp10",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp10",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp11",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp11",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp12",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp12",
+  "judge": "claude-opus",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp13",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp13",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp14",
+  "judge": "claude-fable",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp14",
+  "judge": "claude-opus",
+  "verdict": "B"
+ },
+ {
+  "id": "cmp15",
+  "judge": "claude-fable",
+  "verdict": "A"
+ },
+ {
+  "id": "cmp15",
+  "judge": "claude-opus",
+  "verdict": "A"
+ }
+]

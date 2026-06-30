@@ -4,14 +4,18 @@
 
 This artifact supports the claims in the Model_LvUP preprint by releasing the
 benchmark tasks, checkers, scored outputs, statistics scripts, judge artifacts,
-and paper source used for the reported LvUP-Bench v2 results.
+and paper source used for the reported LvUP-Bench v1 and v2 results.
 
 ## What Is Included
 
 - `bench/v2/tasks/`: task prompts, references, checkers, and hidden tests where
   the task format supports them.
+- `bench/tasks/` and `bench/checkers/`: Study 1 prompts and deterministic
+  objective-task checkers.
 - `bench/v2/validate.py`: structural validator for task metadata, reference
   scores, near-miss behavior, hidden-test coverage, and math ground truth.
+- `results/all_objective.scored.json`: scored Study 1 objective rows.
+- `results/judging/`: Study 1 blinded pairwise judged comparisons and verdicts.
 - `results/v2/all_runs.scored.json`: scored v2 run table used by the paper.
 - `results/v2/stats.json`: generated summary statistics.
 - `results/v2/judging/`: blinded pairwise judged comparisons and verdicts.
@@ -30,6 +34,8 @@ and paper source used for the reported LvUP-Bench v2 results.
 ## Reproducibility Commands
 
 ```bash
+python3 analysis/score_runs.py --check results/all_objective.scored.json
+python3 analysis/aggregate_judgments.py results/judging
 python3 bench/v2/validate.py
 python3 analysis/v2_stats.py results/v2/all_runs.scored.json
 python3 analysis/v2_domain_map.py results/v2/all_runs.scored.json
@@ -51,5 +57,7 @@ python3 analysis/v2_figures.py results/v2/all_runs.scored.json
   as model-quality scores.
 - Public judge file naming was normalized so the GPT-5.5 judge is not confused
   with a generation arm.
+- Study 1 contains scored objective rows and blinded judgment artifacts for
+  inspection and recomputation; it does not include private local workflow logs.
 - The artifact is sufficient to inspect and recompute the reported tables, but
   not to rerun closed-model generations without separate provider access.

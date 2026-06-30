@@ -4,7 +4,7 @@ This repository is the public reproducibility artifact for the preprint
 **Inference-Time Scaffolding Across Two Axes: Closing a Cross-Generation Gap
 and Climbing a Model-Tier Ladder with Rubric-Anchored Adversarial Refinement**.
 
-The artifact contains the RAAR method, LvUP-Bench v2 tasks and checkers,
+The artifact contains the RAAR method, LvUP-Bench v1 and v2 tasks and checkers,
 scored experiment outputs, analysis scripts, blinded judge artifacts, and the
 current paper source/PDF.
 
@@ -17,21 +17,25 @@ current paper source/PDF.
 
 The generator comparisons in this artifact are Claude-family comparisons:
 Haiku, Sonnet, Opus, and Fable. GPT-5.5 is used as a blinded judge only.
-There is no GPT-5.5 generation arm in `results/v2/all_runs.scored.json`.
+There is no GPT-5.5 generation arm in `results/v2/all_runs.scored.json` or
+the Study 1 scored rows.
 
-The public judge file `results/v2/judging/gpt55_judge_verdicts.jsonl`
-normalizes the internal collection label from the original local artifact to
-make the judge role explicit. This rename does not change verdict contents or
-paper numbers.
+The public judge files `results/judging/gpt55_judge_verdicts.jsonl` and
+`results/v2/judging/gpt55_judge_verdicts.jsonl` normalize the internal
+collection label from the original local artifact to make the judge role
+explicit. This rename does not change verdict contents or paper numbers.
 
 ## Repository Layout
 
 ```text
 analysis/                 scoring, statistics, figures, and judge aggregation
+bench/tasks/              LvUP-Bench v1 task prompts
+bench/checkers/           LvUP-Bench v1 deterministic checkers
 bench/v2/                 LvUP-Bench v2 task suite and validator
 docs/                     checker hardening and domain-map notes
 harness/                  RAAR reference implementation
 paper/                    current paper source, PDF, and figures
+results/                  Study 1 scored rows and blinded judge artifacts
 results/v2/               raw/scored v2 runs, stats, reviews, and judge data
 ```
 
@@ -40,6 +44,8 @@ results/v2/               raw/scored v2 runs, stats, reviews, and judge data
 Run from the repository root:
 
 ```bash
+python3 analysis/score_runs.py --check results/all_objective.scored.json
+python3 analysis/aggregate_judgments.py results/judging
 python3 bench/v2/validate.py
 python3 analysis/v2_stats.py results/v2/all_runs.scored.json
 python3 analysis/v2_domain_map.py results/v2/all_runs.scored.json

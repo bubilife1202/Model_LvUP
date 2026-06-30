@@ -1,0 +1,178 @@
+[
+ {
+  "id": "cmp00",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "base-fable"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "base-fable"
+ },
+ {
+  "id": "cmp01",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "base-fable"
+  ],
+  "order": 1,
+  "A": "base-fable",
+  "B": "lvup"
+ },
+ {
+  "id": "cmp02",
+  "task": "T6_design",
+  "pair": [
+   "base-opus",
+   "base-fable"
+  ],
+  "order": 0,
+  "A": "base-opus",
+  "B": "base-fable"
+ },
+ {
+  "id": "cmp03",
+  "task": "T6_design",
+  "pair": [
+   "base-opus",
+   "base-fable"
+  ],
+  "order": 1,
+  "A": "base-fable",
+  "B": "base-opus"
+ },
+ {
+  "id": "cmp04",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "base-opus"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "base-opus"
+ },
+ {
+  "id": "cmp05",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "base-opus"
+  ],
+  "order": 1,
+  "A": "base-opus",
+  "B": "lvup"
+ },
+ {
+  "id": "cmp06",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "selfrefine"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "selfrefine"
+ },
+ {
+  "id": "cmp07",
+  "task": "T6_design",
+  "pair": [
+   "lvup",
+   "selfrefine"
+  ],
+  "order": 1,
+  "A": "selfrefine",
+  "B": "lvup"
+ },
+ {
+  "id": "cmp08",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "base-fable"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "base-fable"
+ },
+ {
+  "id": "cmp09",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "base-fable"
+  ],
+  "order": 1,
+  "A": "base-fable",
+  "B": "lvup"
+ },
+ {
+  "id": "cmp10",
+  "task": "T7_explain",
+  "pair": [
+   "base-opus",
+   "base-fable"
+  ],
+  "order": 0,
+  "A": "base-opus",
+  "B": "base-fable"
+ },
+ {
+  "id": "cmp11",
+  "task": "T7_explain",
+  "pair": [
+   "base-opus",
+   "base-fable"
+  ],
+  "order": 1,
+  "A": "base-fable",
+  "B": "base-opus"
+ },
+ {
+  "id": "cmp12",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "base-opus"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "base-opus"
+ },
+ {
+  "id": "cmp13",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "base-opus"
+  ],
+  "order": 1,
+  "A": "base-opus",
+  "B": "lvup"
+ },
+ {
+  "id": "cmp14",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "selfrefine"
+  ],
+  "order": 0,
+  "A": "lvup",
+  "B": "selfrefine"
+ },
+ {
+  "id": "cmp15",
+  "task": "T7_explain",
+  "pair": [
+   "lvup",
+   "selfrefine"
+  ],
+  "order": 1,
+  "A": "selfrefine",
+  "B": "lvup"
+ }
+]
