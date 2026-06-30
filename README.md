@@ -35,7 +35,7 @@ bench/v2/                 LvUP-Bench v2 task suite and validator
 docs/                     checker hardening and domain-map notes
 harness/                  RAAR reference implementation
 paper/                    current paper source, PDF, and figures
-results/                  Study 1 scored rows and blinded judge artifacts
+results/                  Study 1 scored rows, sanitized transcripts, and judges
 results/v2/               raw/scored v2 runs, stats, reviews, and judge data
 ```
 
@@ -60,6 +60,10 @@ the Anthropic SDK:
 python3 -m pip install -r requirements.txt
 python3 analysis/v2_figures.py results/v2/all_runs.scored.json
 ```
+
+Study 1 mechanism checks refer to the sanitized role-separated message
+transcripts under `results/transcripts/study1_math_batch/`. These retain the
+ordered user/assistant message content while removing local workflow metadata.
 
 ## Main v2 Numbers
 

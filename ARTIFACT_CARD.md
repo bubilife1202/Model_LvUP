@@ -15,6 +15,8 @@ and paper source used for the reported LvUP-Bench v1 and v2 results.
 - `bench/v2/validate.py`: structural validator for task metadata, reference
   scores, near-miss behavior, hidden-test coverage, and math ground truth.
 - `results/all_objective.scored.json`: scored Study 1 objective rows.
+- `results/transcripts/study1_math_batch/`: sanitized Study 1 role-separated
+  message transcripts used for qualitative mechanism checks.
 - `results/judging/`: Study 1 blinded pairwise judged comparisons and verdicts.
 - `results/v2/all_runs.scored.json`: scored v2 run table used by the paper.
 - `results/v2/stats.json`: generated summary statistics.
@@ -27,8 +29,8 @@ and paper source used for the reported LvUP-Bench v1 and v2 results.
 
 - Private local workflow logs such as `.omo`, `.omc`, `.omx`, and `.claude`.
 - Secrets, credentials, or provider API keys.
-- Large historical transcript dumps and earlier exploratory runs that are not
-  needed to reproduce the reported v2 paper numbers.
+- Large historical transcript dumps and earlier exploratory runs beyond the
+  sanitized Study 1 public transcripts needed for mechanism inspection.
 - A GPT-5.5 generator arm. GPT-5.5 is judge-only in this release.
 
 ## Reproducibility Commands
@@ -57,7 +59,8 @@ python3 analysis/v2_figures.py results/v2/all_runs.scored.json
   as model-quality scores.
 - Public judge file naming was normalized so the GPT-5.5 judge is not confused
   with a generation arm.
-- Study 1 contains scored objective rows and blinded judgment artifacts for
-  inspection and recomputation; it does not include private local workflow logs.
+- Study 1 contains scored objective rows, sanitized role-separated transcripts,
+  and blinded judgment artifacts for inspection and recomputation; it does not
+  include private local workflow logs.
 - The artifact is sufficient to inspect and recompute the reported tables, but
   not to rerun closed-model generations without separate provider access.

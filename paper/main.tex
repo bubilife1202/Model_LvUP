@@ -190,10 +190,11 @@ can narrow a one-tier-down model's gap to unscaffolded frontier output on the
 measured headroom slice, does not clearly recover two-tier drops, and remains weak on
 coherence-shaped prose (Section~\ref{sec:study2-domain}).
 \item \textbf{A diagnostic artifact for follow-on work:} the release keeps raw
-outputs, scored rows, failed/no-answer cells, judge manifests, checker
-hardening notes, and adversarial-review findings together so that later work
-can reproduce, criticize, extend, or falsify the boundary map rather than
-trust a compressed headline.
+outputs, sanitized Study~1 role-separated message transcripts, scored rows,
+failed/no-answer cells, judge manifests, checker hardening notes, and
+adversarial-review findings together so that later work can reproduce,
+criticize, extend, or falsify the boundary map rather than trust a compressed
+headline.
 \end{itemize}
 
 \section{Related Work}
@@ -974,7 +975,8 @@ neither lifts nor harms the frontier tier measurably.
 \label{sec:analysis}
 The transcript-level analyses below remain specific to Study~1, which is the
 only study with the full predecessor/successor loop comparison and the
-complete role-separated transcripts needed to diagnose mechanism.
+full sanitized role-separated message transcripts needed to diagnose
+mechanism.
 
 \subsection{Gate Behavior}
 \label{sec:gate-analysis}
@@ -1055,10 +1057,14 @@ structure alone.
 \section{Code, Data, and Reproducibility}
 \label{sec:reproducibility}
 The companion artifact is organized so that each claim can be traced back to
-source prompts, raw outputs, scored rows, judge manifests, and analysis
-scripts. Study~1 task prompts and checkers are under \texttt{bench/tasks/}
-and \texttt{bench/checkers/}, with scored objective rows in
-\texttt{results/all\_objective.scored.json}. Study~2 task prompts are the
+source prompts, raw outputs, scored rows, judge manifests, transcripts where
+available, and analysis scripts. Study~1 task prompts and checkers are under
+\texttt{bench/tasks/} and \texttt{bench/checkers/}, with scored objective rows
+in \texttt{results/all\_objective.scored.json}. Sanitized Study~1
+role-separated message transcripts are under
+\texttt{results/transcripts/study1\_math\_batch/}; they preserve ordered
+user/assistant message content while removing local workflow metadata. Study~2
+task prompts are the
 \texttt{prompt} fields in \texttt{bench/v2/tasks/*/task.json}; the structural
 benchmark validator is \texttt{bench/v2/validate.py}; raw and scored runs are
 under \texttt{results/v2/}; and the statistics used in the paper are produced

@@ -1,0 +1,1363 @@
+{
+  "artifact": "Model_LvUP Study 1 sanitized public transcripts",
+  "assistant_model_message_counts": {
+    "claude-fable-5": 66,
+    "claude-opus-4-8": 1200
+  },
+  "file_count": 130,
+  "files": [
+    {
+      "agent_id": "a01d872b7d120e4c8",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a01d872b7d120e4c8.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-bo3-s0.0",
+      "source_file": "agent-a01d872b7d120e4c8.jsonl"
+    },
+    {
+      "agent_id": "a28dc64544bd31ce8",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a28dc64544bd31ce8.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-bo3-s0.1",
+      "source_file": "agent-a28dc64544bd31ce8.jsonl"
+    },
+    {
+      "agent_id": "a668b1961ef38da0e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a668b1961ef38da0e.jsonl",
+      "message_count": 16,
+      "run_label": "T3_M1_digits-bo3-s0.2",
+      "source_file": "agent-a668b1961ef38da0e.jsonl"
+    },
+    {
+      "agent_id": "a0d2283ce36614068",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0d2283ce36614068.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-bo3-s1.0",
+      "source_file": "agent-a0d2283ce36614068.jsonl"
+    },
+    {
+      "agent_id": "aa25cee4b78646a0d",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aa25cee4b78646a0d.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-bo3-s1.1",
+      "source_file": "agent-aa25cee4b78646a0d.jsonl"
+    },
+    {
+      "agent_id": "ab408acaf8327e098",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ab408acaf8327e098.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-bo3-s1.2",
+      "source_file": "agent-ab408acaf8327e098.jsonl"
+    },
+    {
+      "agent_id": "aab9c83ce14414416",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aab9c83ce14414416.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-bo3-s2.0",
+      "source_file": "agent-aab9c83ce14414416.jsonl"
+    },
+    {
+      "agent_id": "a4b75e863c4b465a2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a4b75e863c4b465a2.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-bo3-s2.1",
+      "source_file": "agent-a4b75e863c4b465a2.jsonl"
+    },
+    {
+      "agent_id": "a66ba9754b2375eff",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a66ba9754b2375eff.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-bo3-s2.2",
+      "source_file": "agent-a66ba9754b2375eff.jsonl"
+    },
+    {
+      "agent_id": "a7876737f5b226c1b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7876737f5b226c1b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-lv-s0.0",
+      "source_file": "agent-a7876737f5b226c1b.jsonl"
+    },
+    {
+      "agent_id": "a190acbecafcef59e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a190acbecafcef59e.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-lv-s0.1",
+      "source_file": "agent-a190acbecafcef59e.jsonl"
+    },
+    {
+      "agent_id": "a9ab3c12afc77bfe5",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a9ab3c12afc77bfe5.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-lv-s0.2",
+      "source_file": "agent-a9ab3c12afc77bfe5.jsonl"
+    },
+    {
+      "agent_id": "a11eb2b820bb05e1a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a11eb2b820bb05e1a.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-lv-s1.0",
+      "source_file": "agent-a11eb2b820bb05e1a.jsonl"
+    },
+    {
+      "agent_id": "ab995d349bc4f8a32",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ab995d349bc4f8a32.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-lv-s1.1",
+      "source_file": "agent-ab995d349bc4f8a32.jsonl"
+    },
+    {
+      "agent_id": "ae1dbde195a882412",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae1dbde195a882412.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-lv-s1.2",
+      "source_file": "agent-ae1dbde195a882412.jsonl"
+    },
+    {
+      "agent_id": "a19c604c7ce824ed2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a19c604c7ce824ed2.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-lv-s2.0",
+      "source_file": "agent-a19c604c7ce824ed2.jsonl"
+    },
+    {
+      "agent_id": "aa80fecf52b443262",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aa80fecf52b443262.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-lv-s2.1",
+      "source_file": "agent-aa80fecf52b443262.jsonl"
+    },
+    {
+      "agent_id": "a312532413cd7b57e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a312532413cd7b57e.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-lv-s2.2",
+      "source_file": "agent-a312532413cd7b57e.jsonl"
+    },
+    {
+      "agent_id": "a09bb64fe2dfeae33",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a09bb64fe2dfeae33.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-s0",
+      "source_file": "agent-a09bb64fe2dfeae33.jsonl"
+    },
+    {
+      "agent_id": "ac3d8dfdd6ba0cfc5",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-ac3d8dfdd6ba0cfc5.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M1_digits-s0",
+      "source_file": "agent-ac3d8dfdd6ba0cfc5.jsonl"
+    },
+    {
+      "agent_id": "a1ab58cf0b5c74410",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-a1ab58cf0b5c74410.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M1_digits-s1",
+      "source_file": "agent-a1ab58cf0b5c74410.jsonl"
+    },
+    {
+      "agent_id": "a36165f42102c5769",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a36165f42102c5769.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-s1",
+      "source_file": "agent-a36165f42102c5769.jsonl"
+    },
+    {
+      "agent_id": "a057384df4a29c506",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-a057384df4a29c506.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M1_digits-s2",
+      "source_file": "agent-a057384df4a29c506.jsonl"
+    },
+    {
+      "agent_id": "adb690c2c3102b98b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adb690c2c3102b98b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-s2",
+      "source_file": "agent-adb690c2c3102b98b.jsonl"
+    },
+    {
+      "agent_id": "a15596c9848212d7c",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a15596c9848212d7c.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s0",
+      "source_file": "agent-a15596c9848212d7c.jsonl"
+    },
+    {
+      "agent_id": "a1f9c8766e644d288",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a1f9c8766e644d288.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s0",
+      "source_file": "agent-a1f9c8766e644d288.jsonl"
+    },
+    {
+      "agent_id": "a8c82c77c55959f78",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a8c82c77c55959f78.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s0",
+      "source_file": "agent-a8c82c77c55959f78.jsonl"
+    },
+    {
+      "agent_id": "abe554a5f5bd5e992",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-abe554a5f5bd5e992.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s0",
+      "source_file": "agent-abe554a5f5bd5e992.jsonl"
+    },
+    {
+      "agent_id": "ad61b15968b6d0a2f",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ad61b15968b6d0a2f.jsonl",
+      "message_count": 13,
+      "run_label": "T3_M1_digits-sr-s0",
+      "source_file": "agent-ad61b15968b6d0a2f.jsonl"
+    },
+    {
+      "agent_id": "a7392efa8b5850163",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7392efa8b5850163.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s1",
+      "source_file": "agent-a7392efa8b5850163.jsonl"
+    },
+    {
+      "agent_id": "a984e870ef424218b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a984e870ef424218b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s1",
+      "source_file": "agent-a984e870ef424218b.jsonl"
+    },
+    {
+      "agent_id": "abac6ae18798367b3",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-abac6ae18798367b3.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s1",
+      "source_file": "agent-abac6ae18798367b3.jsonl"
+    },
+    {
+      "agent_id": "ac7efe80a65d3ba5d",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac7efe80a65d3ba5d.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s1",
+      "source_file": "agent-ac7efe80a65d3ba5d.jsonl"
+    },
+    {
+      "agent_id": "adaf26cbde2888bd6",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adaf26cbde2888bd6.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s1",
+      "source_file": "agent-adaf26cbde2888bd6.jsonl"
+    },
+    {
+      "agent_id": "a2047aff65fddb1ae",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a2047aff65fddb1ae.jsonl",
+      "message_count": 11,
+      "run_label": "T3_M1_digits-sr-s2",
+      "source_file": "agent-a2047aff65fddb1ae.jsonl"
+    },
+    {
+      "agent_id": "a6d9ea610fb57dcce",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a6d9ea610fb57dcce.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s2",
+      "source_file": "agent-a6d9ea610fb57dcce.jsonl"
+    },
+    {
+      "agent_id": "a7c5ec250c0aaafe4",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7c5ec250c0aaafe4.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s2",
+      "source_file": "agent-a7c5ec250c0aaafe4.jsonl"
+    },
+    {
+      "agent_id": "a85ee2d99e712fe1a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a85ee2d99e712fe1a.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s2",
+      "source_file": "agent-a85ee2d99e712fe1a.jsonl"
+    },
+    {
+      "agent_id": "a879f67bea099b6f8",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a879f67bea099b6f8.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M1_digits-sr-s2",
+      "source_file": "agent-a879f67bea099b6f8.jsonl"
+    },
+    {
+      "agent_id": "a81f1b57597277d25",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a81f1b57597277d25.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s0.0",
+      "source_file": "agent-a81f1b57597277d25.jsonl"
+    },
+    {
+      "agent_id": "aa587f362298688c2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aa587f362298688c2.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s0.1",
+      "source_file": "agent-aa587f362298688c2.jsonl"
+    },
+    {
+      "agent_id": "a388d502d08b6e108",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a388d502d08b6e108.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s0.2",
+      "source_file": "agent-a388d502d08b6e108.jsonl"
+    },
+    {
+      "agent_id": "a36fa61824722221a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a36fa61824722221a.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s1.0",
+      "source_file": "agent-a36fa61824722221a.jsonl"
+    },
+    {
+      "agent_id": "adfe07c395146c41d",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adfe07c395146c41d.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s1.1",
+      "source_file": "agent-adfe07c395146c41d.jsonl"
+    },
+    {
+      "agent_id": "a799f5aff48273bed",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a799f5aff48273bed.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s1.2",
+      "source_file": "agent-a799f5aff48273bed.jsonl"
+    },
+    {
+      "agent_id": "add43628472c88478",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-add43628472c88478.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s2.0",
+      "source_file": "agent-add43628472c88478.jsonl"
+    },
+    {
+      "agent_id": "a7e5c4284cbe62499",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7e5c4284cbe62499.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s2.1",
+      "source_file": "agent-a7e5c4284cbe62499.jsonl"
+    },
+    {
+      "agent_id": "a0417dd4e16347e02",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0417dd4e16347e02.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-bo3-s2.2",
+      "source_file": "agent-a0417dd4e16347e02.jsonl"
+    },
+    {
+      "agent_id": "a92a16e61333ce515",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a92a16e61333ce515.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s0.0",
+      "source_file": "agent-a92a16e61333ce515.jsonl"
+    },
+    {
+      "agent_id": "a7437138246438068",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7437138246438068.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s0.1",
+      "source_file": "agent-a7437138246438068.jsonl"
+    },
+    {
+      "agent_id": "a81eb3aca3c83e008",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a81eb3aca3c83e008.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s0.2",
+      "source_file": "agent-a81eb3aca3c83e008.jsonl"
+    },
+    {
+      "agent_id": "ae4f91feff1dfe005",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae4f91feff1dfe005.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s1.0",
+      "source_file": "agent-ae4f91feff1dfe005.jsonl"
+    },
+    {
+      "agent_id": "a2411edce6c4be16b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a2411edce6c4be16b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s1.1",
+      "source_file": "agent-a2411edce6c4be16b.jsonl"
+    },
+    {
+      "agent_id": "ae09d67a9da3fd77e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae09d67a9da3fd77e.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s1.2",
+      "source_file": "agent-ae09d67a9da3fd77e.jsonl"
+    },
+    {
+      "agent_id": "a53ab181e9e551878",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a53ab181e9e551878.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s2.0",
+      "source_file": "agent-a53ab181e9e551878.jsonl"
+    },
+    {
+      "agent_id": "adcb7b62791a556f7",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adcb7b62791a556f7.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s2.1",
+      "source_file": "agent-adcb7b62791a556f7.jsonl"
+    },
+    {
+      "agent_id": "a4550d94ccb246dbc",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a4550d94ccb246dbc.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-lv-s2.2",
+      "source_file": "agent-a4550d94ccb246dbc.jsonl"
+    },
+    {
+      "agent_id": "a4fc24d39f49b8a88",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-a4fc24d39f49b8a88.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M2_binary-s0",
+      "source_file": "agent-a4fc24d39f49b8a88.jsonl"
+    },
+    {
+      "agent_id": "ae1a73a54b05d19f0",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae1a73a54b05d19f0.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-s0",
+      "source_file": "agent-ae1a73a54b05d19f0.jsonl"
+    },
+    {
+      "agent_id": "a7e262e43453012fa",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7e262e43453012fa.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-s1",
+      "source_file": "agent-a7e262e43453012fa.jsonl"
+    },
+    {
+      "agent_id": "af9dd7f52913b3254",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-af9dd7f52913b3254.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M2_binary-s1",
+      "source_file": "agent-af9dd7f52913b3254.jsonl"
+    },
+    {
+      "agent_id": "a3e80e94de4449b96",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a3e80e94de4449b96.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-s2",
+      "source_file": "agent-a3e80e94de4449b96.jsonl"
+    },
+    {
+      "agent_id": "a94d815f9f562ea9e",
+      "assistant_models": [
+        "claude-fable-5"
+      ],
+      "file": "agent-a94d815f9f562ea9e.jsonl",
+      "message_count": 12,
+      "run_label": "T3_M2_binary-s2",
+      "source_file": "agent-a94d815f9f562ea9e.jsonl"
+    },
+    {
+      "agent_id": "a41c15df725edbadc",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a41c15df725edbadc.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s0",
+      "source_file": "agent-a41c15df725edbadc.jsonl"
+    },
+    {
+      "agent_id": "a5d47e3c877fb7b88",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a5d47e3c877fb7b88.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s0",
+      "source_file": "agent-a5d47e3c877fb7b88.jsonl"
+    },
+    {
+      "agent_id": "a810cc2c43ba4cfad",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a810cc2c43ba4cfad.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s0",
+      "source_file": "agent-a810cc2c43ba4cfad.jsonl"
+    },
+    {
+      "agent_id": "a927290557983c6cb",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a927290557983c6cb.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s0",
+      "source_file": "agent-a927290557983c6cb.jsonl"
+    },
+    {
+      "agent_id": "af64ec4c4376a5d0b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-af64ec4c4376a5d0b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s0",
+      "source_file": "agent-af64ec4c4376a5d0b.jsonl"
+    },
+    {
+      "agent_id": "a21c5ee276c172898",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a21c5ee276c172898.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s1",
+      "source_file": "agent-a21c5ee276c172898.jsonl"
+    },
+    {
+      "agent_id": "a4e3487b45433a235",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a4e3487b45433a235.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s1",
+      "source_file": "agent-a4e3487b45433a235.jsonl"
+    },
+    {
+      "agent_id": "ac062100bc8475560",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac062100bc8475560.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s1",
+      "source_file": "agent-ac062100bc8475560.jsonl"
+    },
+    {
+      "agent_id": "ac1ff9b9ab5ef24b7",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac1ff9b9ab5ef24b7.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s1",
+      "source_file": "agent-ac1ff9b9ab5ef24b7.jsonl"
+    },
+    {
+      "agent_id": "afbabb8a3ed9ac5c1",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-afbabb8a3ed9ac5c1.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s1",
+      "source_file": "agent-afbabb8a3ed9ac5c1.jsonl"
+    },
+    {
+      "agent_id": "a0d40eece45aa402d",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0d40eece45aa402d.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s2",
+      "source_file": "agent-a0d40eece45aa402d.jsonl"
+    },
+    {
+      "agent_id": "a2b50f190fb8d78bb",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a2b50f190fb8d78bb.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s2",
+      "source_file": "agent-a2b50f190fb8d78bb.jsonl"
+    },
+    {
+      "agent_id": "a82bbd0691115cb58",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a82bbd0691115cb58.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s2",
+      "source_file": "agent-a82bbd0691115cb58.jsonl"
+    },
+    {
+      "agent_id": "ade7a26a76059796b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ade7a26a76059796b.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s2",
+      "source_file": "agent-ade7a26a76059796b.jsonl"
+    },
+    {
+      "agent_id": "ae960f262bda75c07",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae960f262bda75c07.jsonl",
+      "message_count": 10,
+      "run_label": "T3_M2_binary-sr-s2",
+      "source_file": "agent-ae960f262bda75c07.jsonl"
+    },
+    {
+      "agent_id": "a00a7e7a29838a5e2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a00a7e7a29838a5e2.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a00a7e7a29838a5e2.jsonl"
+    },
+    {
+      "agent_id": "a08ef9099e5fb83ea",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a08ef9099e5fb83ea.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a08ef9099e5fb83ea.jsonl"
+    },
+    {
+      "agent_id": "a0bdefd1f2134d8ec",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0bdefd1f2134d8ec.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a0bdefd1f2134d8ec.jsonl"
+    },
+    {
+      "agent_id": "a0def31eacaf281ed",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0def31eacaf281ed.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a0def31eacaf281ed.jsonl"
+    },
+    {
+      "agent_id": "a0e6587b057e6087b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a0e6587b057e6087b.jsonl",
+      "message_count": 19,
+      "run_label": "code",
+      "source_file": "agent-a0e6587b057e6087b.jsonl"
+    },
+    {
+      "agent_id": "a1094d8b308012182",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a1094d8b308012182.jsonl",
+      "message_count": 17,
+      "run_label": "code",
+      "source_file": "agent-a1094d8b308012182.jsonl"
+    },
+    {
+      "agent_id": "a131afb75137c7d69",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a131afb75137c7d69.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a131afb75137c7d69.jsonl"
+    },
+    {
+      "agent_id": "a16c60f8379ed39c2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a16c60f8379ed39c2.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a16c60f8379ed39c2.jsonl"
+    },
+    {
+      "agent_id": "a18c87c5edfb36c9c",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a18c87c5edfb36c9c.jsonl",
+      "message_count": 13,
+      "run_label": "code",
+      "source_file": "agent-a18c87c5edfb36c9c.jsonl"
+    },
+    {
+      "agent_id": "a2812b944544830e7",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a2812b944544830e7.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a2812b944544830e7.jsonl"
+    },
+    {
+      "agent_id": "a2dfd0d06ae4c7cc6",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a2dfd0d06ae4c7cc6.jsonl",
+      "message_count": 16,
+      "run_label": "code",
+      "source_file": "agent-a2dfd0d06ae4c7cc6.jsonl"
+    },
+    {
+      "agent_id": "a370f3f17a28af407",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a370f3f17a28af407.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a370f3f17a28af407.jsonl"
+    },
+    {
+      "agent_id": "a39d91e8f5af4b9d0",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a39d91e8f5af4b9d0.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a39d91e8f5af4b9d0.jsonl"
+    },
+    {
+      "agent_id": "a3dc873a534fb77be",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a3dc873a534fb77be.jsonl",
+      "message_count": 16,
+      "run_label": "code",
+      "source_file": "agent-a3dc873a534fb77be.jsonl"
+    },
+    {
+      "agent_id": "a3fdaf777abe2427b",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a3fdaf777abe2427b.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a3fdaf777abe2427b.jsonl"
+    },
+    {
+      "agent_id": "a42774f19bef0891f",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a42774f19bef0891f.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a42774f19bef0891f.jsonl"
+    },
+    {
+      "agent_id": "a4af07fa4cf947742",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a4af07fa4cf947742.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a4af07fa4cf947742.jsonl"
+    },
+    {
+      "agent_id": "a5c24673e12805664",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a5c24673e12805664.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a5c24673e12805664.jsonl"
+    },
+    {
+      "agent_id": "a6ce063c4e67f7518",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a6ce063c4e67f7518.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a6ce063c4e67f7518.jsonl"
+    },
+    {
+      "agent_id": "a6f70678bbe9e6143",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a6f70678bbe9e6143.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a6f70678bbe9e6143.jsonl"
+    },
+    {
+      "agent_id": "a713660601bf1fb81",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a713660601bf1fb81.jsonl",
+      "message_count": 22,
+      "run_label": "code",
+      "source_file": "agent-a713660601bf1fb81.jsonl"
+    },
+    {
+      "agent_id": "a78e7cf54586a133d",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a78e7cf54586a133d.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a78e7cf54586a133d.jsonl"
+    },
+    {
+      "agent_id": "a7e3eff9ad923c2a5",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a7e3eff9ad923c2a5.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a7e3eff9ad923c2a5.jsonl"
+    },
+    {
+      "agent_id": "a809ee69265159c9e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a809ee69265159c9e.jsonl",
+      "message_count": 22,
+      "run_label": "code",
+      "source_file": "agent-a809ee69265159c9e.jsonl"
+    },
+    {
+      "agent_id": "a81359ad84153c5bb",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a81359ad84153c5bb.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a81359ad84153c5bb.jsonl"
+    },
+    {
+      "agent_id": "a835ba2a4fe7b7b9f",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a835ba2a4fe7b7b9f.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a835ba2a4fe7b7b9f.jsonl"
+    },
+    {
+      "agent_id": "a87b6b2513cf9984e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a87b6b2513cf9984e.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a87b6b2513cf9984e.jsonl"
+    },
+    {
+      "agent_id": "a91278997fda279e0",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a91278997fda279e0.jsonl",
+      "message_count": 19,
+      "run_label": "code",
+      "source_file": "agent-a91278997fda279e0.jsonl"
+    },
+    {
+      "agent_id": "a9554e1b2066920b0",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a9554e1b2066920b0.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a9554e1b2066920b0.jsonl"
+    },
+    {
+      "agent_id": "a982d33e359b401ff",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a982d33e359b401ff.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a982d33e359b401ff.jsonl"
+    },
+    {
+      "agent_id": "a9a6838417b0a044e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-a9a6838417b0a044e.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-a9a6838417b0a044e.jsonl"
+    },
+    {
+      "agent_id": "aad1ac9ef717b6363",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aad1ac9ef717b6363.jsonl",
+      "message_count": 16,
+      "run_label": "code",
+      "source_file": "agent-aad1ac9ef717b6363.jsonl"
+    },
+    {
+      "agent_id": "abd8c368374dec1ce",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-abd8c368374dec1ce.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-abd8c368374dec1ce.jsonl"
+    },
+    {
+      "agent_id": "ac0672f467c414c86",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac0672f467c414c86.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-ac0672f467c414c86.jsonl"
+    },
+    {
+      "agent_id": "ac263d0845523b2b3",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac263d0845523b2b3.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-ac263d0845523b2b3.jsonl"
+    },
+    {
+      "agent_id": "ac543cddf82002fec",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac543cddf82002fec.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-ac543cddf82002fec.jsonl"
+    },
+    {
+      "agent_id": "ac80d83802974f88a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac80d83802974f88a.jsonl",
+      "message_count": 16,
+      "run_label": "code",
+      "source_file": "agent-ac80d83802974f88a.jsonl"
+    },
+    {
+      "agent_id": "ac9b51275bbf997bb",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ac9b51275bbf997bb.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-ac9b51275bbf997bb.jsonl"
+    },
+    {
+      "agent_id": "acabe1fd851cc4c48",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-acabe1fd851cc4c48.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-acabe1fd851cc4c48.jsonl"
+    },
+    {
+      "agent_id": "acdfa472f765a4129",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-acdfa472f765a4129.jsonl",
+      "message_count": 13,
+      "run_label": "code",
+      "source_file": "agent-acdfa472f765a4129.jsonl"
+    },
+    {
+      "agent_id": "acf77489f239e5dbc",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-acf77489f239e5dbc.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-acf77489f239e5dbc.jsonl"
+    },
+    {
+      "agent_id": "ad5595e94e5fa508a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ad5595e94e5fa508a.jsonl",
+      "message_count": 13,
+      "run_label": "code",
+      "source_file": "agent-ad5595e94e5fa508a.jsonl"
+    },
+    {
+      "agent_id": "adb2e28e914bb20f6",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adb2e28e914bb20f6.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-adb2e28e914bb20f6.jsonl"
+    },
+    {
+      "agent_id": "adc8691d610c0bf90",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-adc8691d610c0bf90.jsonl",
+      "message_count": 13,
+      "run_label": "code",
+      "source_file": "agent-adc8691d610c0bf90.jsonl"
+    },
+    {
+      "agent_id": "ae11a19750084ca4a",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-ae11a19750084ca4a.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-ae11a19750084ca4a.jsonl"
+    },
+    {
+      "agent_id": "aee204584d714cbc2",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aee204584d714cbc2.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-aee204584d714cbc2.jsonl"
+    },
+    {
+      "agent_id": "aefaba78ce79ed196",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-aefaba78ce79ed196.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-aefaba78ce79ed196.jsonl"
+    },
+    {
+      "agent_id": "af2b55de3d456c79e",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-af2b55de3d456c79e.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-af2b55de3d456c79e.jsonl"
+    },
+    {
+      "agent_id": "af428775874c915cf",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-af428775874c915cf.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-af428775874c915cf.jsonl"
+    },
+    {
+      "agent_id": "af4a3e26c949da343",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-af4a3e26c949da343.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-af4a3e26c949da343.jsonl"
+    },
+    {
+      "agent_id": "af53124c0c8063530",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-af53124c0c8063530.jsonl",
+      "message_count": 10,
+      "run_label": "code",
+      "source_file": "agent-af53124c0c8063530.jsonl"
+    },
+    {
+      "agent_id": "afddae6e4ceac8a70",
+      "assistant_models": [
+        "claude-opus-4-8"
+      ],
+      "file": "agent-afddae6e4ceac8a70.jsonl",
+      "message_count": 13,
+      "run_label": "code",
+      "source_file": "agent-afddae6e4ceac8a70.jsonl"
+    }
+  ],
+  "public_directory": "results/transcripts/study1_math_batch",
+  "run_label_counts": {
+    "T3_M1_digits-bo3-s0.0": 1,
+    "T3_M1_digits-bo3-s0.1": 1,
+    "T3_M1_digits-bo3-s0.2": 1,
+    "T3_M1_digits-bo3-s1.0": 1,
+    "T3_M1_digits-bo3-s1.1": 1,
+    "T3_M1_digits-bo3-s1.2": 1,
+    "T3_M1_digits-bo3-s2.0": 1,
+    "T3_M1_digits-bo3-s2.1": 1,
+    "T3_M1_digits-bo3-s2.2": 1,
+    "T3_M1_digits-lv-s0.0": 1,
+    "T3_M1_digits-lv-s0.1": 1,
+    "T3_M1_digits-lv-s0.2": 1,
+    "T3_M1_digits-lv-s1.0": 1,
+    "T3_M1_digits-lv-s1.1": 1,
+    "T3_M1_digits-lv-s1.2": 1,
+    "T3_M1_digits-lv-s2.0": 1,
+    "T3_M1_digits-lv-s2.1": 1,
+    "T3_M1_digits-lv-s2.2": 1,
+    "T3_M1_digits-s0": 2,
+    "T3_M1_digits-s1": 2,
+    "T3_M1_digits-s2": 2,
+    "T3_M1_digits-sr-s0": 5,
+    "T3_M1_digits-sr-s1": 5,
+    "T3_M1_digits-sr-s2": 5,
+    "T3_M2_binary-bo3-s0.0": 1,
+    "T3_M2_binary-bo3-s0.1": 1,
+    "T3_M2_binary-bo3-s0.2": 1,
+    "T3_M2_binary-bo3-s1.0": 1,
+    "T3_M2_binary-bo3-s1.1": 1,
+    "T3_M2_binary-bo3-s1.2": 1,
+    "T3_M2_binary-bo3-s2.0": 1,
+    "T3_M2_binary-bo3-s2.1": 1,
+    "T3_M2_binary-bo3-s2.2": 1,
+    "T3_M2_binary-lv-s0.0": 1,
+    "T3_M2_binary-lv-s0.1": 1,
+    "T3_M2_binary-lv-s0.2": 1,
+    "T3_M2_binary-lv-s1.0": 1,
+    "T3_M2_binary-lv-s1.1": 1,
+    "T3_M2_binary-lv-s1.2": 1,
+    "T3_M2_binary-lv-s2.0": 1,
+    "T3_M2_binary-lv-s2.1": 1,
+    "T3_M2_binary-lv-s2.2": 1,
+    "T3_M2_binary-s0": 2,
+    "T3_M2_binary-s1": 2,
+    "T3_M2_binary-s2": 2,
+    "T3_M2_binary-sr-s0": 5,
+    "T3_M2_binary-sr-s1": 5,
+    "T3_M2_binary-sr-s2": 5,
+    "code": 52
+  },
+  "source_directory": "results/transcripts/math_batch (private local source)"
+}
